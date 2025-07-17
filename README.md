@@ -49,9 +49,11 @@ Para la entrega, deberéis fijaros en:
 ### Hall of Fame - Seminarios
 
 ##### Edición 2024-2025
+Para una correcta visualización de los archivos `.html`, deberás descargarlos ("*guardar enlace como*") y abrirlos en tu navegador.
+
 *  [Enfermedades raras del sistema nervioso](/INPUT/SEMINARIOS/HALL_of_FAME/2024-2025/Enfermedades_raras_sistema_nervioso.html)
-*  [Seminario Enfermedades Crónicas]()
-*  [Registros Red de Hospitales]()
+*  [Seminario Enfermedades Crónicas](/INPUT/SEMINARIOS/HALL_of_FAME/2024-2025/Seminario_Enfermedades_Cronicas.html)
+*  [Registros Red de Hospitales](/INPUT/SEMINARIOS/HALL_of_FAME/2024-2025/Registros_Red_Hospitales.html)
 
 ***
 ## Recursos para `SQL`, `R` , `Tidyverse` y `Fuentes de Datos`
