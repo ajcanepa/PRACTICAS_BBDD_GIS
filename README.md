@@ -79,7 +79,6 @@ Para la entrega, deberéis fijaros en:
 ### Large Language Models (LLM - Generative AI)
 
 #### Recursos para R
-*  [Herramientas para usar modelos de lenguaje de gran escala (LLM) en R](https://luisdva.github.io/llmsr-book/es/index.es.html)
 *  [Ingeniería de prompt con ChatGPT](https://www.promptingguide.ai/es/models/chatgpt)
 *  [Biblioteca de prompts educativos](https://eduprompts.tiddlyhost.com)
 *  [Claude - AI](https://claude.ai/new)
@@ -89,28 +88,7 @@ Para la entrega, deberéis fijaros en:
 *  2024  [The use of generative AI for coding in academia](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.14454)
 *  2024  [Harnessing LLM for coding, teaching and inclusion to empower research](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.14325)
 
-### Control de Versiones (R/RStudio and Git/Github)
-* [Map-of-Github](https://anvaka.github.io/map-of-github/#2/0/0)
-* [Cómo usar Git/GitHub con R](http://destio.us.es/calvo/asignaturas/ge_esco/tutorialusargitgithubrstudio/UsarGitGithubconRStudio.html)
-* [¡Se puede aprender cómo funciona Git y GitHub!](https://www.revistaecosistemas.net/index.php/ecosistemas/article/view/2332/1505)
-* [git - la guía sencilla](https://rogerdudler.github.io/git-guide/index.es.html)
-* [Chapter 4 Git, in:Reproducible Analytical Pipelines ](https://b-rodrigues.github.io/rap4mads/git.html)
-* [Connect RStudio to Git and GitHub](https://happygitwithr.com/rstudio-git-github)
-* [Happy Git and GitHub for the useR](https://happygitwithr.com/)
-* [Cómo vincular y usar Git con RStudio](https://anderfernandez.com/blog/como-vincular-y-usar-git-con-rstudio/)
-* [Git y GitHub con R](https://rpubs.com/RonaldoAnticona/818156)
-* [Ciencia reproducible: qué, por qué, cómo](https://www.revistaecosistemas.net/index.php/ecosistemas/article/view/1178/973)
-
 ### Communicación
-##### Gráficos
-*  [The R Graph Gallery](https://r-graph-gallery.com/)
-*  [Colores en R](https://r-charts.com/es/colores/)
-*  [ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/)
-*  [ggplot2 extensions](https://exts.ggplot2.tidyverse.org/)
-*  [awesome-r-dataviz](https://krzjoa.github.io/awesome-r-dataviz/)
-*  [R Graphics Cookbook](https://r-graphics.org/)
-*  [FlowChart. Tidy Flowchart Generator](https://bruigtp.github.io/flowchart/index.html)
-*  [accidental aRt](https://accidental-art.tumblr.com/)
 
 ##### Documentos
 *  [Introducción al uso de RMarkdown](https://bookdown.org/gboccardo/manual-ED-UCH/introduccion-al-uso-de-rmarkdown-para-la-compilacion-de-resultados-de-rstudio-en-diferentes-formatos.html)
@@ -121,18 +99,6 @@ Para la entrega, deberéis fijaros en:
 *  [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)
 *  [R Markdown Cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)
 *  [The bookdown package](https://bookdown.org/)
-
-##### Aplicaciones (APPs)
-*  [Shiny](https://shiny.posit.co/r/getstarted/shiny-basics/lesson1/index.html)
-*  [`bslib` R package](https://rstudio.github.io/bslib/)
-*  [Mastering Shiny](https://mastering-shiny.org/)
-*  [shinydashboard](https://rstudio.github.io/shinydashboard/index.html)
-
-###### Despliegue APPs/Dashboards/Docs.
-*  [Deploy a Shiny Application with R](https://docs.posit.co/connect-cloud/how-to/r/shiny-r.html)
-*  [Publish a Quarto Document with R ](https://docs.posit.co/connect-cloud/how-to/r/quarto-r.html)
-*  [Deploy a LLM-powered Shiny for R](https://docs.posit.co/connect-cloud/how-to/r/llm-shiny-r.html)
-*  [Create a manifest.json file for Connect Cloud](https://docs.posit.co/connect-cloud/how-to/r/dependencies.html)
 
 ### Estadística y meta-análisis
 *  [An Introduction to Statistical Learning](https://www.statlearning.com/)
@@ -184,67 +150,5 @@ Para la entrega, deberéis fijaros en:
 *  2017 [Evolution of the R software ecosystem: Metrics, relationships, and their impact on qualities](https://www.sciencedirect.com/science/article/pii/S0164121217301371)
 *  2014 [Programming tools: Adventures with R](https://www.nature.com/articles/517109a)
 *  2013 [The Evolution of the R Software Ecosystem](https://ieeexplore.ieee.org/document/6498472)
-
-***
-
-### Fuentes de Datos Abiertos
-* [DATOS SINTÉTICOS: ¿QUÉ SON Y PARA QUÉ SE USAN?](https://datos.gob.es/sites/default/files/doc/file/informe-datos-sinteticos-es.pdf)
-* [Datos sintéticos y protección de datos](https://www.aepd.es/prensa-y-comunicacion/blog/datos-sinteticos-y-proteccion-de-datos)
-* [Datos abiertos Gob. España](https://datos.gob.es/es/catalogo) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
-* [Datos abiertos CyL](https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
-* [Redes de calidad del aire autonómicas y locales](https://www.miteco.gob.es/es/calidad-y-evaluacion-ambiental/temas/atmosfera-y-calidad-del-aire/calidad-del-aire/evaluacion-datos/redes.html)
-* [Calidad del Aire - Spain](https://www.miteco.gob.es/es/calidad-y-evaluacion-ambiental/temas/atmosfera-y-calidad-del-aire/evaluacion-y-datos-de-calidad-del-aire/datos.html)
-* [Calidad de Aire - JCyL](https://servicios.jcyl.es/esco/index.action)
-* [Red Calidad Aire - JCyL](https://medioambiente.jcyl.es/web/es/calidad-ambiental/red-calidad-aire.html)
-* [Estaciones de control de la calidad del aire - JCyL](https://datosabiertos.jcyl.es/web/jcyl/set/es/medio-ambiente/calidad_aire_estaciones/1284212701893)
-* [Calidad del aire (por horas) - JCyL](https://datosabiertos.jcyl.es/web/jcyl/set/es/medio-ambiente/calidad-aire-historico-horario/1284808467480)
-* [Datos espaciales de hospitales](https://opendata.esri.es/datasets/ComunidadSIG::hospitales-de-espa%C3%B1a/about)
-* [INE (Instituto Nacional de Estadística) package](https://inebaser.wordpress.com/)
-* [INE - Encuesta de morbilidad hospitalaria](https://www.ine.es/dyngs/INEbase/es/operacion.htm?c=Estadistica_C&cid=1254736176778&menu=resultados&idp=1254735573175#_tabs-1254736194704)
-* [INE - Lista completa](https://www.ine.es/dyngs/INEbase/es/listaoperaciones.htm)
-* [rOpenSpain community](https://ropenspain.es/) / [GitHub-Repo](https://github.com/rOpenSpain)
-* [Environmental information systems - Europe](https://www.eea.europa.eu/en/information-systems)
-* [Air Quality download service - Europe](https://www.eea.europa.eu/en/datahub/datahubitem-view/778ef9f5-6293-4846-badd-56a29c70880d)
-* [European Environment Information and Observation Network](https://www.eionet.europa.eu/)
-* [European city air quality viewer](https://www.eea.europa.eu/en/topics/in-depth/air-pollution/european-city-air-quality-viewer)
-* [Atmosphere Data Store - Copernicus](https://ads.atmosphere.copernicus.eu/)
-* [**GISCO** is the Geographic Information System of the Commission](https://ec.europa.eu/eurostat/web/gisco/overview)
-* [**giscoR** package to retrieve data from GISCO](https://ropengov.github.io/giscoR/)
-* [Global Health Data Exchange](https://ghdx.healthdata.org/) / [`ihme`: an R package](https://github.com/ShadeWilson/ihme)
-* [MedDataSets](https://lightbluetitan.github.io/meddatasets/index.html)
-* [medicaldata](https://higgi13425.github.io/medicaldata/index.html)
-* [NHS-R Community Datasets](https://nhs-r-community.github.io/NHSRdatasets/)
-* [Eurostat Portal](https://ec.europa.eu/eurostat/).
-* [Eurostat R-Package](https://cloud.r-project.org/web/packages/eurostat/index.html).
-* [European Health Information Initiative (EHII)](https://www.euro.who.int/en/data-and-evidence/european-health-information-initiative-ehii)
-* [World Health Organization (WHO)](https://www.who.int/data)
-* [World Health Organization - Health Observatory](https://www.who.int/data/gho)
-* [rOpenHealth](https://github.com/rOpenHealth)
-* [European Environment Agency](https://www.eea.europa.eu/en)
-* [European Environment Agency - Datahub](https://www.eea.europa.eu/en/datahub?size=n_10_n&filters%5B0%5D%5Bfield%5D=issued.date&filters%5B0%5D%5Btype%5D=any&filters%5B0%5D%5Bvalues%5D%5B0%5D=All%20time)
-* [greenR: An R Package for Quantifying Urban Greenness](https://github.com/sachit27/greenR)
-* [CAMS European air quality reanalyses](https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-reanalyses?tab=overview)
-* [Water Quality ICM](https://www.eea.europa.eu/en/datahub/datahubitem-view/fbf3717c-cd7b-4785-933a-d0cf510542e1)
-* [World Bank Water Data](https://wbwaterdata.org/dataset/)
-* [Datos Kaggle](https://www.kaggle.com/datasets).
-* [Google Environmental Insights Explorer](https://insights.sustainability.google/?hl=en-US).
-* [European Cancer Information System](https://ecis.jrc.ec.europa.eu/en)
-* [infectiousR](https://lightbluetitan.github.io/infectiousr/index.html)
-* [medicaldata: Data Package for Medical Datasets](https://higgi13425.github.io/medicaldata/)
-* [MedDataSets: Comprehensive Medical, Disease, Treatment, and Drug Datasets](https://cran.r-project.org/web/packages/MedDataSets/index.html)
-* [NHS-R Community Datasets](https://nhs-r-community.github.io/NHSRdatasets/)
-* [gigs - Guidance for International Growth Standards project](https://docs.ropensci.org/gigs/)
-* [OncoDataSets](https://lightbluetitan.github.io/oncodatasets/)
-* [crimedatasets](https://lightbluetitan.github.io/crimedatasets/)
-* [DigestiveDataSets](https://github.com/lightbluetitan/digestivedatasets/tree/main)
-* [PulmoDataSets](https://github.com/lightbluetitan/pulmodatasets)
-* [NeuroDataSets](https://github.com/lightbluetitan/neurodatasets)
-* [CardioDataSets](https://github.com/lightbluetitan/cardiodatasets)
-* [DataSetsVerse](https://lightbluetitan.github.io/datasetsverse/)
-
-***
-
-### Concursos
-* [Concurso de Visualización de Datos con R - 2025](https://github.com/grupoRasturias/dataviz-contest-2025)
 
 ***
