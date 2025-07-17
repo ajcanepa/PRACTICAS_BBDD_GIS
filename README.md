@@ -1,4 +1,5 @@
-# PRACTICAS "Bases de Datos" <img src='INPUT/IMAGES/Data_Base_Schema_Pincho_Cajonera.png' align="right" height="120" />
+# PRACTICAS "Bases de Datos" <img src='INPUT/IMAGES/Data_Base_Schema_Pincho_Cajonera.png' align="right" height="100" />
+<img src='INPUT/IMAGES/Escudo Color TL.png' align="right" height="100" />
 
 Repositorio en el que se desarrollará el código de las prácticas de la asignatura "Bases de Datos", del grado de [Ingeniería de la Salud](https://www.ubu.es/grado-en-ingenieria-de-la-salud), de la [Universidad de Burgos](https://www.ubu.es).
 
