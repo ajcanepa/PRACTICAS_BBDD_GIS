@@ -1,0 +1,241 @@
+---
+title: "Seminario Asignatura"
+subtitle: "Bases de Datos"
+author: "Antonio Canepa"
+output: html_document
+---
+
+# Crear una conexión a una BBDD local usando R
+
+Para poder ejecutar los comandos de `sql` en un documento RMarkdown, deberemos utilizar los paquetes `DBI` y `RPostgres`. 
+
+A continuación se detalla los pasos necesarios para generar una conexión local.
+
+```{r warning=FALSE, message=FALSE}
+# Cargar el paquete RPostgres
+library(DBI)
+library(RPostgres)
+
+# Conectar a la base de datos PostgreSQL
+con <- dbConnect(RPostgres::Postgres(),
+                 dbname = "postgres",  # Nombre de la base de datos
+                 host = "localhost",           # Dirección del host
+                 port = 5432,                  # Puerto de PostgreSQL
+                 user = "postgres",          # Tu usuario de PostgreSQL
+                 password = "postgres")   # Tu contraseña de PostgreSQL
+```
+
+# Idea de Seminario
+En este semianrio tendréis que ser capáz de generar tablas con datos relativos a la salud humana y/o biomedicina. Para esto tendréis que buscar en diferentes repositorios de datos disponibles.
+
+A continuación te dejo un **pequeño** listado con recursos, pero se valorará la obtención de datos de diversos orígenes.
+
+  - [Datos abiertos Gob. España](https://datos.gob.es/es/catalogo) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
+  - [Datos abiertos CyL](https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
+  - [Datos espaciales de hospitales](https://opendata.esri.es/datasets/ComunidadSIG::hospitales-de-espa%C3%B1a/about)
+  - [INE (Instituto Nacional de Estadística) package](https://inebaser.wordpress.com/)
+  - [rOpenSpain community](https://ropenspain.es/) / [GitHub-Repo](https://github.com/rOpenSpain)
+  - [European Health Information Initiative (EHII)](https://www.euro.who.int/en/data-and-evidence/european-health-information-initiative-ehii)
+  - [World Health Organization (WHO)](https://www.who.int/data)
+  - [rOpenHealth](https://github.com/rOpenHealth)
+
+## Datos del seminario
+Los datos deberán ser ingresados "*manualmente*"; es decir, que tendréis que crear las tablas vosotros mismos y así poder aplicar todas (o la gran mayoría) de conceptos y restricciones que veamos en prácticas.  
+
+## Tablas del seminario
+El número de tablas creadas no está definido pero han de ser más de dos. De esta manera podréis construir preguntas/ejemplos en los que poner en práctica la unión de tablas y el calculo de variables y operaciones (sumarias, de conjunto, etc).
+
+## Texto del seminario
+El texto deberá seguir el orden de un informe/artículo científico; en el que se vean claramente:
+
+-   **Introducción**: se hablará del tema a tratar y de dónde provienen los datos.
+-   **Objetivos/Preguntas**: se detallarán un máximo de 4 preguntas (u objetivos), los cuales serán respondidos con consultas en SQL.
+-   **Métodología y Resultados**: se corresponde con la ejecución del código y la obtención de las tablas resultantes que responderán a las pregunats anteriores.
+
+# Ejemplo de seminario
+
+A continuación os dejo un ejercicio muy básico para que veáis cómo estructurar el trabajo del seminario. Reitero que es muy básico y un seminario similar a este ejemplo, __no estaría a la altura de ser aprobado__.
+
+## Introducción
+
+Estos datos se corresponden a un ejemplo sintético (*i.e.* ficticio) de __epidemiología__.
+
+En total se crearán tres __tablas__. 
+
+1. __Tabla pacientes__: Contendrá los datos de los pacientes.
+2. __Tabla consultas__: Contendrá los registros de consultas médicas.
+3. __Tabla tratamientos__: Contendrá los tratamientos que se administran a los pacientes.
+
+## Objetivos/Preguntas
+A continuación se responderán las siguientes preguntas:
+
+1. ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
+2. Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
+3. ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
+
+## Metodología y Resultados
+Código del seminario
+
+### Creación de tablas
+
+#### __Tabla pacientes__
+Contendrá los datos de los pacientes.
+ 
+```{r, warning=FALSE, message=FALSE}
+# Crear tabla 'pacientes'
+dbExecute(con, "
+CREATE TABLE pacientes (
+    id_paciente SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    edad INTEGER CHECK (edad >= 0), -- La edad no puede ser negativa
+    genero VARCHAR(10) CHECK (genero IN ('Masculino', 'Femenino', 'Otro')), -- Género debe ser uno de estos valores
+    peso DECIMAL(5,2) CHECK (peso > 0), -- Peso debe ser mayor a 0
+    altura DECIMAL(4,2) CHECK (altura > 0) -- Altura debe ser mayor a 0
+);
+")
+```
+
+Ahora agregamos los datos de los pacientes
+```{r, warning=FALSE, message=FALSE}
+# Insertar datos en 'pacientes'
+dbExecute(con, "
+INSERT INTO pacientes (nombre, edad, genero, peso, altura) 
+VALUES 
+    ('Juan Pérez', 45, 'Masculino', 80.5, 1.75),
+    ('Ana López', 30, 'Femenino', 65.3, 1.68),
+    ('Carlos Martínez', 60, 'Masculino', 90.2, 1.80);
+")
+```
+
+Mostramos la tabla
+```{sql, connection=con}
+SELECT * FROM pacientes; 
+```
+
+
+#### __Tabla consultas__ 
+Contendrá los registros de consultas médicas.
+
+```{r, message=FALSE, warning=FALSE}
+# Crear tabla 'consultas'
+dbExecute(con, "
+CREATE TABLE consultas (
+    id_consulta SERIAL PRIMARY KEY,
+    id_paciente INTEGER REFERENCES pacientes(id_paciente), -- Clave foránea a 'pacientes'
+    fecha DATE NOT NULL,
+    diagnostico VARCHAR(255),
+    CONSTRAINT chk_fecha CHECK (fecha <= CURRENT_DATE) -- La fecha de consulta no puede ser futura
+);
+")
+```
+
+Ahora agregamos valores a las tablas de consultas
+```{r, warning=FALSE, message=FALSE}
+# Insertar datos en 'consultas'
+dbExecute(con, "
+INSERT INTO consultas (id_paciente, fecha, diagnostico) 
+VALUES 
+    (1, '2024-01-10', 'Hipertensión'),
+    (2, '2024-02-15', 'Diabetes Tipo 2'),
+    (3, '2024-03-01', 'Insuficiencia Cardíaca');
+")
+```
+
+Mostramos la tabla
+```{sql, connection=con}
+SELECT * FROM consultas; 
+```
+
+#### __Tabla tratamientos__ 
+Contendrá los tratamientos que se administran a los pacientes.
+
+```{r warning=FALSE, message=FALSE}
+# Crear tabla 'tratamientos'
+dbExecute(con, "
+CREATE TABLE tratamientos (
+    id_tratamiento SERIAL PRIMARY KEY,
+    id_consulta INTEGER REFERENCES consultas(id_consulta), -- Clave foránea a 'consultas'
+    nombre_tratamiento VARCHAR(100) NOT NULL,
+    duracion_dias INTEGER CHECK (duracion_dias > 0), -- La duración del tratamiento debe ser mayor a 0
+    dosis_mg DECIMAL(5,2) CHECK (dosis_mg > 0) -- La dosis debe ser mayor a 0
+);
+")
+```
+
+Ahora agregamos valores a la tabla de tratamientos
+```{r, warning=FALSE, message=FALSE}
+# Insertar datos en 'tratamientos'
+dbExecute(con, "
+INSERT INTO tratamientos (id_consulta, nombre_tratamiento, duracion_dias, dosis_mg) 
+VALUES 
+    (1, 'Enalapril', 30, 10.5),
+    (2, 'Metformina', 60, 850.0),
+    (3, 'Furosemida', 15, 40.0);
+")
+```
+
+Mostramos la tabla
+```{sql, connection=con}
+SELECT * FROM tratamientos; 
+```
+
+### Pregunta 1
+1. ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
+
+```{sql, connection=con}
+SELECT pacientes.nombre, tratamientos.nombre_tratamiento
+FROM pacientes 
+JOIN consultas ON pacientes.id_paciente = consultas.id_paciente
+JOIN tratamientos ON consultas.id_consulta = tratamientos.id_consulta;
+```
+
+### Pregunta 2
+2. Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
+```{sql, connection=con}
+SELECT consultas.diagnostico, COUNT(consultas.id_consulta) AS total_consultas
+FROM consultas 
+GROUP BY consultas.diagnostico;
+```
+
+
+
+### Pregunta 3
+3. ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
+
+```{sql, connection=con}
+SELECT consultas.diagnostico, AVG(tratamientos.dosis_mg) AS dosis_promedio
+FROM consultas 
+JOIN tratamientos ON consultas.id_consulta = tratamientos.id_consulta
+GROUP BY consultas.diagnostico;
+```
+```{r, echo=FALSE, eval=FALSE}
+# Consultar los datos
+result <- dbGetQuery(con, "SELECT * FROM usuarios")
+print(result)
+```
+
+# Finalizando el documento
+
+Para finalizar el documento (y no entorpecer con las prácticas), es necesario crear un código que nos permita __borrar todas las tablas creadas__. 
+
+```{r, message=FALSE, warning=FALSE}
+# Obtener la lista de todas las tablas en la base de datos
+tables <- dbListTables(con)
+print(tables)
+
+# Borrar todas las tablas
+for (table in tables) {
+  dbExecute(con, paste0("DROP TABLE IF EXISTS ", table, " CASCADE;"))
+}
+
+# Verificar que no queden tablas
+tables_after <- dbListTables(con)
+print(tables_after)
+
+```
+
+Finalmente, desconectamos la base de datos local.
+```{r}
+# Cerrar la conexión
+dbDisconnect(con)
+```
