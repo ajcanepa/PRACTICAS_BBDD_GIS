@@ -63,6 +63,8 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 ### SQL, PostgreSQL y pgAdmin
 * [PostgreSQL](https://www.postgresql.org/)
 * [pgAdmin](https://www.pgadmin.org/)
+* [DuckDB](https://duckdb.org/)
+  * [awesome-duckdb](https://github.com/davidgasquez/awesome-duckdb)
 * [Database of Databases](https://dbdb.io/)
 
 ### Repositorios oficiales de R
@@ -79,6 +81,7 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 * [Best Practices in Working with Databases](https://solutions.posit.co/connections/db/)
 * [SQL databases and R](https://datacarpentry.github.io/R-ecology-lesson/instructor/05-r-and-databases.html)
 * [SQL translation](https://solutions.posit.co/connections/db/advanced/translation/)
+* [DuckDB - RClient](https://duckdb.org/docs/stable/clients/r.html)
 
 #### Herramientas para _Entity-Relationship Diagrams_ (**ERDs**)
 * [dm - Rpackage](https://github.com/cynkra/dm/)
