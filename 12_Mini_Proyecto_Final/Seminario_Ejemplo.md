@@ -2,7 +2,7 @@
 title: "Seminario Asignatura"
 subtitle: "Bases de Datos"
 author: "Antonio Canepa"
-date: "`r Sys.Date()`"
+date: "2025-07-18"
 output: 
   html_document:
     keep_md: true
@@ -15,7 +15,8 @@ Para poder ejecutar los comandos de `sql` en un documento RMarkdown, deberemos u
 
 A continuación se detalla los pasos necesarios para generar una conexión local.
 
-```{r warning=FALSE, message=FALSE}
+
+``` r
 # Cargar el paquete RPostgres
 library(DBI)
 library(RPostgres)
@@ -85,7 +86,8 @@ Código del seminario
 #### __Tabla pacientes__
 Contendrá los datos de los pacientes.
  
-```{r, warning=FALSE, message=FALSE}
+
+``` r
 # Crear tabla 'pacientes'
 dbExecute(con, "
 CREATE TABLE pacientes (
@@ -99,8 +101,13 @@ CREATE TABLE pacientes (
 ")
 ```
 
+```
+## [1] 0
+```
+
 Ahora agregamos los datos de los pacientes
-```{r, warning=FALSE, message=FALSE}
+
+``` r
 # Insertar datos en 'pacientes'
 dbExecute(con, "
 INSERT INTO pacientes (nombre, edad, genero, peso, altura) 
@@ -111,16 +118,36 @@ VALUES
 ")
 ```
 
+```
+## [1] 3
+```
+
 Mostramos la tabla
-```{sql, connection=con}
+
+``` sql
 SELECT * FROM pacientes; 
 ```
+
+
+<div class="knitsql-table">
+
+
+Table: 3 records
+
+|id_paciente |nombre          | edad|genero    | peso| altura|
+|:-----------|:---------------|----:|:---------|----:|------:|
+|1           |Juan Pérez      |   45|Masculino | 80.5|   1.75|
+|2           |Ana López       |   30|Femenino  | 65.3|   1.68|
+|3           |Carlos Martínez |   60|Masculino | 90.2|   1.80|
+
+</div>
 
 
 #### __Tabla consultas__ 
 Contendrá los registros de consultas médicas.
 
-```{r, message=FALSE, warning=FALSE}
+
+``` r
 # Crear tabla 'consultas'
 dbExecute(con, "
 CREATE TABLE consultas (
@@ -133,8 +160,13 @@ CREATE TABLE consultas (
 ")
 ```
 
+```
+## [1] 0
+```
+
 Ahora agregamos valores a las tablas de consultas
-```{r, warning=FALSE, message=FALSE}
+
+``` r
 # Insertar datos en 'consultas'
 dbExecute(con, "
 INSERT INTO consultas (id_paciente, fecha, diagnostico) 
@@ -145,15 +177,35 @@ VALUES
 ")
 ```
 
+```
+## [1] 3
+```
+
 Mostramos la tabla
-```{sql, connection=con}
+
+``` sql
 SELECT * FROM consultas; 
 ```
+
+
+<div class="knitsql-table">
+
+
+Table: 3 records
+
+|id_consulta | id_paciente|fecha      |diagnostico            |
+|:-----------|-----------:|:----------|:----------------------|
+|1           |           1|2024-01-10 |Hipertensión           |
+|2           |           2|2024-02-15 |Diabetes Tipo 2        |
+|3           |           3|2024-03-01 |Insuficiencia Cardíaca |
+
+</div>
 
 #### __Tabla tratamientos__ 
 Contendrá los tratamientos que se administran a los pacientes.
 
-```{r warning=FALSE, message=FALSE}
+
+``` r
 # Crear tabla 'tratamientos'
 dbExecute(con, "
 CREATE TABLE tratamientos (
@@ -166,8 +218,13 @@ CREATE TABLE tratamientos (
 ")
 ```
 
+```
+## [1] 0
+```
+
 Ahora agregamos valores a la tabla de tratamientos
-```{r, warning=FALSE, message=FALSE}
+
+``` r
 # Insertar datos en 'tratamientos'
 dbExecute(con, "
 INSERT INTO tratamientos (id_consulta, nombre_tratamiento, duracion_dias, dosis_mg) 
@@ -178,55 +235,122 @@ VALUES
 ")
 ```
 
+```
+## [1] 3
+```
+
 Mostramos la tabla
-```{sql, connection=con}
+
+``` sql
 SELECT * FROM tratamientos; 
 ```
+
+
+<div class="knitsql-table">
+
+
+Table: 3 records
+
+|id_tratamiento | id_consulta|nombre_tratamiento | duracion_dias| dosis_mg|
+|:--------------|-----------:|:------------------|-------------:|--------:|
+|1              |           1|Enalapril          |            30|     10.5|
+|2              |           2|Metformina         |            60|    850.0|
+|3              |           3|Furosemida         |            15|     40.0|
+
+</div>
 
 ### Pregunta 1
 1. ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
 
-```{sql, connection=con}
+
+``` sql
 SELECT pacientes.nombre, tratamientos.nombre_tratamiento
 FROM pacientes 
 JOIN consultas ON pacientes.id_paciente = consultas.id_paciente
 JOIN tratamientos ON consultas.id_consulta = tratamientos.id_consulta;
 ```
 
+
+<div class="knitsql-table">
+
+
+Table: 3 records
+
+|nombre          |nombre_tratamiento |
+|:---------------|:------------------|
+|Juan Pérez      |Enalapril          |
+|Ana López       |Metformina         |
+|Carlos Martínez |Furosemida         |
+
+</div>
+
 ### Pregunta 2
 2. Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
-```{sql, connection=con}
+
+``` sql
 SELECT consultas.diagnostico, COUNT(consultas.id_consulta) AS total_consultas
 FROM consultas 
 GROUP BY consultas.diagnostico;
 ```
 
 
+<div class="knitsql-table">
+
+
+Table: 3 records
+
+|diagnostico            | total_consultas|
+|:----------------------|---------------:|
+|Insuficiencia Cardíaca |               1|
+|Hipertensión           |               1|
+|Diabetes Tipo 2        |               1|
+
+</div>
+
+
 
 ### Pregunta 3
 3. ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
 
-```{sql, connection=con}
+
+``` sql
 SELECT consultas.diagnostico, AVG(tratamientos.dosis_mg) AS dosis_promedio
 FROM consultas 
 JOIN tratamientos ON consultas.id_consulta = tratamientos.id_consulta
 GROUP BY consultas.diagnostico;
 ```
-```{r, echo=FALSE, eval=FALSE}
-# Consultar los datos
-result <- dbGetQuery(con, "SELECT * FROM usuarios")
-print(result)
-```
+
+
+<div class="knitsql-table">
+
+
+Table: 3 records
+
+|diagnostico            | dosis_promedio|
+|:----------------------|--------------:|
+|Insuficiencia Cardíaca |           40.0|
+|Hipertensión           |           10.5|
+|Diabetes Tipo 2        |          850.0|
+
+</div>
+
 
 # Finalizando el documento
 
 Para finalizar el documento (y no entorpecer con las prácticas), es necesario crear un código que nos permita __borrar todas las tablas creadas__. 
 
-```{r, message=FALSE, warning=FALSE}
+
+``` r
 # Obtener la lista de todas las tablas en la base de datos
 tables <- dbListTables(con)
 print(tables)
+```
 
+```
+## [1] "consultas"    "pacientes"    "tratamientos"
+```
+
+``` r
 # Borrar todas las tablas
 for (table in tables) {
   dbExecute(con, paste0("DROP TABLE IF EXISTS ", table, " CASCADE;"))
@@ -235,11 +359,15 @@ for (table in tables) {
 # Verificar que no queden tablas
 tables_after <- dbListTables(con)
 print(tables_after)
+```
 
+```
+## character(0)
 ```
 
 Finalmente, desconectamos la base de datos local.
-```{r}
+
+``` r
 # Cerrar la conexión
 dbDisconnect(con)
 ```
