@@ -23,7 +23,9 @@ La entrega se basa en dos archivos y un repostorio que se solicitarán como meca
 * __*ii*__) Archivo *HyperText Markup Language (__HTML__)*, de extensión `.html` que contendrá el seminario *renderizado*, es decir se unirá tanto el texto como el código y sus resultados (*i.e.* tablas.).
 
 Podéis encontrar una explicación del seminario en este documento:
-*  []()
+
+*  [Seminario Asignatura Bases de Datos](https://github.com/ajcanepa/PRACTICAS_BBDD_GIS/blob/main/12_Mini_Proyecto_Final/Seminario_Ejemplo.md)
+
 
 La estructura del seminario contará con los identificadores básicos del seminario como es el `título`, los `autores` y `curso` al que corresponde y con los siguientes apartados específicos:
 
@@ -61,6 +63,7 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 ### SQL, PostgreSQL y pgAdmin
 * [PostgreSQL](https://www.postgresql.org/)
 * [pgAdmin](https://www.pgadmin.org/)
+* [Database of Databases](https://dbdb.io/)
 
 ### Repositorios oficiales de R
 *  [The Comprehensive R Archive Network](https://cran.r-project.org/)
@@ -76,6 +79,17 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 * [Best Practices in Working with Databases](https://solutions.posit.co/connections/db/)
 * [SQL databases and R](https://datacarpentry.github.io/R-ecology-lesson/instructor/05-r-and-databases.html)
 * [SQL translation](https://solutions.posit.co/connections/db/advanced/translation/)
+
+#### Herramientas para _Entity-Relationship Diagrams_ (**ERDs**)
+* [dm - Rpackage](https://github.com/cynkra/dm/)
+  * [dm - Vignette](https://dm.cynkra.com/)
+* [ReDaMoR](https://github.com/patzaw/ReDaMoR/)
+  * [Relational Data Modeler - ReDaMoR](https://patzaw.github.io/ReDaMoR/index.html)
+  * [Modeling Relational Data in R with ReDaMoR](https://patzaw.github.io/ReDaMoR/articles/ReDaMoR.html)
+* [ERDbuilder](https://github.com/gbasulto/ERDbuilder)
+  * [ERDbuilder - Vignette](https://gbasulto.github.io/ERDbuilder/index.html)
+* [dbdiagram.io](https://dbdiagram.io/home)
+
 
 ### Programación
 *  [R for Data Science](https://r4ds.hadley.nz/)
