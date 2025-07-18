@@ -56,9 +56,11 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 *  [Registros Red de Hospitales](/INPUT/SEMINARIOS/HALL_of_FAME/2024-2025/Registros_Red_Hospitales.html)
 
 ***
-## Recursos para `SQL`, `R` , `Tidyverse` y `Fuentes de Datos`
+## Recursos para `SQL`, `R` , `Tidyverse` y `Bases de Datos`
 
-### SQL y PostgreSQL
+### SQL, PostgreSQL y pgAdmin
+* [PostgreSQL](https://www.postgresql.org/)
+* [pgAdmin](https://www.pgadmin.org/)
 
 ### Repositorios oficiales de R
 *  [The Comprehensive R Archive Network](https://cran.r-project.org/)
@@ -66,6 +68,14 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 *  [R-Universe](https://r-universe.dev)
 *  [ROpenScience](https://ropensci.org/)
 *  [ROpenSpain](https://ropenspain.es/)
+
+### R y Bases de datos
+* [CRAN Task View: Databases with R](https://cran.r-project.org/web/views/Databases.html)
+* [R for Data Science - 21  Databases](https://r4ds.hadley.nz/databases.html)
+* [Database Queries With R](https://solutions.posit.co/connections/db/getting-started/database-queries/)
+* [Best Practices in Working with Databases](https://solutions.posit.co/connections/db/)
+* [SQL databases and R](https://datacarpentry.github.io/R-ecology-lesson/instructor/05-r-and-databases.html)
+* [SQL translation](https://solutions.posit.co/connections/db/advanced/translation/)
 
 ### Programación
 *  [R for Data Science](https://r4ds.hadley.nz/)
