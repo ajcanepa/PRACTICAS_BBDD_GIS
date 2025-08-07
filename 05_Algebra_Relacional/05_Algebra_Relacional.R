@@ -5,7 +5,7 @@
 library(tidyverse)
 
 
-# ** 3.0.1 Creamos las tablas ---------------------------------------------
+# ** Creamos las tablas ---------------------------------------------
 # Conjunto de Datos
 rm(empleados)
 
@@ -31,7 +31,7 @@ empleados <-
 
 empleados
 
-# * 3.1 Selección  ----------------------------------------------------------
+# * Selección  ----------------------------------------------------------
 # filter
 # selecciona un subconjunto de filas de la relación original. Se debe utilizar distinct para evitar duplicados
 
@@ -74,7 +74,7 @@ empleados %>%
   distinct()
 
 
-# * 3.2 Proyección --------------------------------------------------------
+# * Proyección --------------------------------------------------------
 # Se utiliza el comando select(). Select(), selecciona un subconjunto de atributos de la relación original.
 # Se debe utilizar distinct para evitar duplicados
 
@@ -114,14 +114,14 @@ empleados
 empleados %>% 
   select(ciudad, dni, nombre, categoria, salario, ventas)
 
-# * 3.3 Operaciones de Conjuntos ------------------------------------------
+# * Operaciones de Conjuntos ------------------------------------------
 # Operaciones de Conjuntos U (unión) ∩ (intersección) - (diferencia)
 # en SQL --> Union = union // Intersección = intersect // diferencia = except
 # Las operaciones de conjuntos eliminan las filas repetidas
 # Estas relaciones han de verificar la llamada "Compatibilidad de Unión". 
 
 
-# ** 3.3.1 Creamos las tablas ---------------------------------------------
+# ** Creamos las tablas ---------------------------------------------
 rm(empleados, ciudades)
 
 # Tabla ciudades
@@ -164,7 +164,7 @@ ciudades
 empleados
 
 
-# ** 3.3.2 Unión ----------------------------------------------------------
+# ** Unión ----------------------------------------------------------
 # Se comporta como AR y quita filas repetidas (DISTINCT no es necesario)
 # select requiere = numero de columnas
 # solo variables con = dominio
@@ -204,7 +204,7 @@ empleados %>%
   )
 
 
-# ** 3.3.3 Intersección ---------------------------------------------------
+# ** Intersección ---------------------------------------------------
 # Comando intersect()
 # Todas las tuplas que están en A y en B simultáneamente
 
@@ -222,7 +222,7 @@ empleados %>%
   )
 
 
-# ** 3.3.4 Resta ----------------------------------------------------------
+# ** Resta ----------------------------------------------------------
 # Comando setdiff()
 
 # Ciudades que no tienen Jefe
@@ -237,11 +237,11 @@ empleados %>%
   )
 
 
-# * 3.4 El modificador ALL en las operaciones de Conjunto ---------------
+# * El modificador ALL en las operaciones de Conjunto ---------------
 # Hay que tener en cuenta que intersect(), union(), setdiff() y symdiff() eliminan los duplicados
 
 
-# ** 3.4.0 Creamos las tablas -----------------------------------
+# ** Creamos las tablas -----------------------------------
 rm(alumnos, profesores)
 
 # Tabla alumnos
@@ -284,7 +284,7 @@ alumnos
 profesores
 
 
-# ** 3.4.1 UNION_ALL ------------------------------------------------------------
+# ** UNION_ALL ------------------------------------------------------------
 # Evitamos los repetidos con union()
 profesores %>% 
   select(dni, Nombre, Ape1, Ape2) %>% 
@@ -333,7 +333,7 @@ alumnos %>%
   )
 
 
-# ** 3.4.2 Arrange en las operaciones de Conjunto ------------------------
+# ** Arrange en las operaciones de Conjunto ------------------------
 # En las operaciones de conjunto el arrange siempre irá al último, aunque a diferencia de SQL no falla si lo ponemos antes.
 
 # Error en SQL, en R/dplyr sí se puede ejecutar
@@ -367,10 +367,10 @@ profesores %>%
   ) %>%   
   arrange(desc(dni))
 
-# * 3.5 Renombrar los Atributos de las Relaciones -------------------------
+# * Renombrar los Atributos de las Relaciones -------------------------
 
 
-# ** 3.5.0 Creamos las tablas ---------------------------------------------
+# ** Creamos las tablas ---------------------------------------------
 rm(empleados, ciudades)
 
 # Tabla ciudades
@@ -413,14 +413,14 @@ ciudades
 empleados
 
 
-# ** 3.5.1 Renombrado sencillo --------------------------------------------
+# ** Renombrado sencillo --------------------------------------------
 # renombrado requiere la definción donde --> nombre.nuevo = nombre.antiguo.
 empleados %>% 
   filter(ciudad == 'Burgos') %>% 
   select(rango = categoria, euros = salario) %>% 
   distinct()
 
-# ** 3.5.2 Renombrado en operaciones de conjunto --------------------------
+# ** Renombrado en operaciones de conjunto --------------------------
 # Creamos las tablas
 rm(alumnos, profesores)
 
@@ -484,12 +484,12 @@ profesores %>%
   arrange(id, Ape1, Ape2)
 
 
-# * 3.6 Producto Cartesiano -----------------------------------------------
+# * Producto Cartesiano -----------------------------------------------
 # Produce una nueva relación con:
 # 1) Todos los atributos de A X B (si hay campos comunes se repiten)
 # 2) Todas las combinaciones posibles entre las filas de las tablas A X B --> ¡tengan o no tengan sentido!
 
-# ** 3.6.0 creamos las tablas ---------------------------------------------
+# ** creamos las tablas ---------------------------------------------
 rm(oficina, empleado, categoria)
 
 # Tabla Oficinas
@@ -543,7 +543,7 @@ oficinas
 categorias
 empleados
 
-# ** 3.6.1 Producto cartesiano (PC) de Oficinas X Empleado ----------------
+# ** Producto cartesiano (PC) de Oficinas X Empleado ----------------
 # La función para el PC en dplyr (tidyr) es crossing.
 # Revisar número de columnas (suma de atributos = suma de grados)
 # Revisar número de filas (multiplicación de cardinalidades --> 2 oficinas X 5 empleados = 10 filas)
@@ -571,11 +571,11 @@ oficinas %>%
 # no existe un equivalente sencillo en `dpyr`.
 
 
-# * 3.7 Theta Join --------------------------------------------------------
+# * Theta Join --------------------------------------------------------
 # Permite fusionar dos tablas en función de la condición representada por theta (>, <, =, !=, etc).
 
 
-# ** 3.7.0 Creamos las tablas ---------------------------------------------
+# ** Creamos las tablas ---------------------------------------------
 rm(oficina, empleado, categoria)
 
 # Tabla Oficinas
@@ -630,7 +630,7 @@ categorias
 empleados
 
 
-# ** 3.7.1 Join derivado --------------------------------------------------
+# ** Join derivado --------------------------------------------------
 # Producto cartesiano. Aparecen todas las combinaciones
 # Revisar a Pepe alineado con diferentes oficinas
 oficinas %>% 
@@ -686,8 +686,7 @@ oficinas %>%
   #select(nombre, oficina, n_oficina) %>% 
   distinct() 
 
-## HASTA AQUI MARTES 29 y JUEVES 31 OCTUBRE ##
-# ** 3.7.2 Join Natural ---------------------------------------------------
+# ** Join Natural ---------------------------------------------------
 # Actualizamos la tabla oficinas
 # Tabla Oficinas
 oficinas <- tibble(
@@ -712,7 +711,7 @@ categorias
 empleados
 
 
-# *** 3.7.2.1 Producto Cartesiano -----------------------------------------
+# *** Producto Cartesiano -----------------------------------------
 # Producto Cartesiano de Empleado X oficina (1º empleado) = 10 filas!
 empleados %>% 
   crossing(., oficinas, .name_repair = "minimal") 
@@ -725,7 +724,7 @@ empleados %>%
   filter(oficina == n_oficina)
 
 
-# *** 3.7.2.2 Atributos de igual nombre -----------------------------------
+# *** Atributos de igual nombre -----------------------------------
 # Join usando atributos de == nombre
 # Todos los nombres
 empleados %>% 
@@ -751,7 +750,7 @@ empleados %>%
   filter(`cargo...4` == `cargo...6`)
 
 
-# *** 3.7.2.3 Union de 3 tablas -------------------------------------------
+# *** Union de 3 tablas -------------------------------------------
 # para juntar más de una relación se necesitan más de un enganche (3 vagones y 2 enganches)
 # deben salir solo 5 filas ya que hay 5 empleados
 
@@ -825,7 +824,7 @@ categorias %>%
   crossing(., empleados, oficinas, .name_repair = "universal") %>% 
   filter((oficina == n_oficina & `region...6` == `region...11`) & `cargo...1` == `cargo...7` & (sal > 2000 | ventas > 500000))
 
-# ** 3.7.3 Join Externo ---------------------------------------------------
+# ** Join Externo ---------------------------------------------------
 # Cuando se unen relaciones a través de un join y que no existe combinación de tuplas, en un
 # join interno no se mostrarán las celdas "vacías". En un Join externo forzaremos a que sí se muestren.
 
@@ -892,9 +891,9 @@ categorias %>%
   arrange(cod)
 
 
-# * 3.8 JOINS Cualificados ------------------------------------------------
+# * JOINS Cualificados ------------------------------------------------
 
-# ** 3.8.1 CROSS JOIN -----------------------------------------------------
+# ** CROSS JOIN -----------------------------------------------------
 # representa el producto cartesiano
 oficinas %>% 
   cross_join(., empleados)
@@ -903,7 +902,7 @@ oficinas %>%
 oficinas %>% 
   crossing(., empleados, .name_repair = "minimal")
 
-# ** 3.8.2 INNER JOIN -----------------------------------------------------
+# ** INNER JOIN -----------------------------------------------------
 # Vuelve a existir la equivalencia con R!
 
 # se puede hacer de la manera tradicional
@@ -931,20 +930,20 @@ oficinas %>%
   filter(((comision*ventas)/100) > (objetivo)/8) %>% 
   arrange(cod) 
 
-# ** 3.8.3 OUTER JOIN -----------------------------------------------------
+# ** OUTER JOIN -----------------------------------------------------
 # Puede ser left/right/full _join()
 
 # Permite seleccionar qué tabla aporta el outer (left, right o ambas (full))
 
 
-# *** 3.8.3.1 LEFT JOIN ---------------------------------------------------
+# *** LEFT JOIN ---------------------------------------------------
 # en este caso para que salgan todas las oficinas (incluso las que no tienen empleado --> n_oficina = 3)
 oficinas %>%
   left_join(., empleados,  by = c("n_oficina" = "oficina"), multiple = "all") %>% 
   arrange(cod)
 
 
-# *** 3.8.3.2 RIGHT JOIN --------------------------------------------------
+# *** RIGHT JOIN --------------------------------------------------
 #  De igual manera se pueden pedir las oficinas incluso que no tengan empleados (Right Join)
 # Efecto de la proyección parcial v/s la total en el orden de los atributos
 empleados %>%
@@ -959,7 +958,7 @@ oficinas %>%
   filter(((comision*ventas)/100) > ((objetivo)/8)) %>% 
   arrange(cod) 
 
-# *** 3.8.3.3 FULL JOIN ---------------------------------------------------
+# *** FULL JOIN ---------------------------------------------------
 # Full join muestra los NA en las filas que no tienen coincidencia en ambas tablas
 
 # todas las oficinas aunque no tengan empleados y todos los empleados aunque no tengan oficina
@@ -967,7 +966,7 @@ oficinas %>%
   full_join(., empleados,  by = c("n_oficina" = "oficina"), multiple = "all")
 
 
-# ** 3.8.4 JOIN usando lista de campos ------------------------------------
+# ** JOIN usando lista de campos ------------------------------------
 # Como en R/dplyr el argumento para seleccionar la/las columnas a unir es un vector `c()` no hay necesidad de cambiar de función como ocurre en SQL.
 
 # En R/dplyr NO requiere que los campos se llamen iguales, incluso puede haber una combinación de ellos.
@@ -988,7 +987,7 @@ categorias %>%
   full_join(., empleados,  by = c("cargo"), multiple = "all") %>% 
   arrange(cod)
 
-# ** 3.8.5 NATURAL JOIN ---------------------------------------------------
+# ** NATURAL JOIN ---------------------------------------------------
 # En R/dplyr el natural join se da automáticamente desactivando el argumento by --> `by = NULL`
 # En R/dplyr las columnas de unión siempre se elimina su duplicidad
 
@@ -1013,9 +1012,7 @@ categorias %>%
   arrange(cod)
 
 
-# * 3.9 Ejercicios de JOINS ----------------------------------------------
-# Sólo hacerlos en SQL
-
+# * Ejercicios de JOINS ----------------------------------------------
 library(dplyr)
 
 # --------------------------------------------------------------------------
@@ -1147,7 +1144,7 @@ result4_4_all <- profesores %>%
          asignatura = nombre.y, horas_clase = horasclase)
 
 # --------------------------------------------------------------------------
-# 9. Relación de conocimiento entre chicos y chicas
+# Relación de conocimiento entre chicos y chicas
 # --------------------------------------------------------------------------
 
 # Creamos las tablas
@@ -1175,7 +1172,3 @@ list(result1_1, result1_1_proj, result1_2, result1_3, result2_1,
      result2_natural, result3_1, result3_2, result4_1, result4_2, 
      result4_3, result4_4, result4_4_all, parejas_no_conocidas, 
      chicos_que_no_conocen_a_todas, chicos_que_conocen_a_todas)
-
-
-
-

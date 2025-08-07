@@ -1,7 +1,13 @@
 /* -------------------------------------------------------------------------- */
-/* ### TEMA 3 Teoría BBDD-GIS ### */
+/* ### TEMA 3 (Teoría BBDD-GIS) ### */
+/* ### ÁLGEBRA RELACIONAL ### */
 /* -------------------------------------------------------------------------- */
+-- PRÁCTICA 5: operaciones de conjunto y AR
+-- Objetivo: Entender el concepto de conjunto y sus operaciones.
 
+/* ###-------------------------------------------------------------------------###
+# Operaciones UNARIAS
+###-------------------------------------------------------------------------### */
 /* CREAMOS BBDD para trabajar */
 
 -- limpiar las tablas
@@ -29,10 +35,9 @@ select * from empleados;
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/* 3.1 Selección */
+/* Selección -- WHERE (Sigma) */
 /* -------------------------------------------------------------------------- */
 /* 
-WHERE (Sigma)
 selecciona un subconjunto de filas de la relación original
 se debe utilizar distinct para evitar duplicados
 */
@@ -72,13 +77,10 @@ and salario > ventas;
 /* -------------------------------------------------------------------------- */
 
 
-
 /* -------------------------------------------------------------------------- */
-/* 3.2 Proyección */
+/* Proyección -- SELECT (pi) */
 /* -------------------------------------------------------------------------- */
-
 /* 
-PROJECT (pi) -- SELECT
 selecciona un subconjunto de atributos de la relación original
 se debe utilizar distinct para evitar duplicados
 */
@@ -105,7 +107,7 @@ from empleados;
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/* 3.3 Operaciones de Conjuntos */
+/* Operaciones de Conjuntos */
 /* -------------------------------------------------------------------------- */
 /* 
 Operaciones de Conjuntos U (unión) ∩ (intersección) - (diferencia)
@@ -155,8 +157,10 @@ insert into empleados values
 -- revisar atributos en común
 select * from Ciudades; 
 select * from Empleados;
+
 /* -------------------------------------------------------------------------- */
 /* UNION U */
+/* -------------------------------------------------------------------------- */
 /*
 Se comporta como AR y quita filas repetidas (DISTINCT no es necesario)
 select requiere = numero de columnas
@@ -183,7 +187,7 @@ select ciudad from Ciudades where habitantes<100000;
 
 /* -------------------------------------------------------------------------- */
 /* Intersección INTERSECT */
-
+/* -------------------------------------------------------------------------- */
 /* Todas las tuplas que están en A y en B simultáneamente.*/
 
 /*Ciudades que tienen tanto jefes como vendedores*/
@@ -200,7 +204,7 @@ select ciudad from empleados where categoria='Vendedor';
 /* -------------------------------------------------------------------------- */
 /* Diferencia EXCEPT */
 /*Ciudades que no tienen Jefe*/
-
+/* -------------------------------------------------------------------------- */
 -- visualizamos completa BBDD ciudad 
 select * from empleados;
 
@@ -213,14 +217,11 @@ select ciudad from empleados where categoria='Jefe';
 
 
 /* -------------------------------------------------------------------------- */
-/* 3.4.1 El modificador ALL en las operaciones de Conjunto */
+/* El modificador ALL en las operaciones de Conjunto */
 /* -------------------------------------------------------------------------- */
-
 /* 
 El modificador ALL en las operaciones de Conjunto
 las ordenaciones son unas de las operaciones más costosas para el sistema, y debemos evitarlas
-
-Nota: El material de esta sección está en 1.4b Operaciones de Conjuntos.sql
 */
 
 /* -------------------------------------------------------------------------- */
@@ -261,8 +262,8 @@ select * from alumnos;
 select * from profesores;
 
 /* -------------------------------------------------------------------------- */
-
 /* UNION ALL, EXCEPT ALL, etc */
+/* -------------------------------------------------------------------------- */
 /*
 Revisar la velocidad a la que se ejecutan ambos comandos
 */
@@ -320,9 +321,8 @@ FROM profesores;
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/* 3.4.2 ORDER BY en las operaciones de Conjunto */
+/* ORDER BY en las operaciones de Conjunto */
 /* -------------------------------------------------------------------------- */
-
 /*
 el SGBD interpreta que el ORDER BY afecta a toda la unión en su conjunto:
 -- ORDER BY --> siempre al final, como cláusla global
@@ -360,26 +360,19 @@ ORDER BY dni desc;
 
 
 /* -------------------------------------------------------------------------- */
-/* 4. Renombrar los Atributos de las Relaciones */
+/* Renombrar los Atributos de las Relaciones */
 /* -------------------------------------------------------------------------- */
-
 /* 
 Un problema en AR y en operaciones de conjunto, es que no está claro cuál 
 es el nombre de los atributos de la relación resultante.
 
 es conveniente haberlos renombrado previamente para asegurarnos de que los 
 atributos de A y B tienen el mismo nombre
-
-
-Nota: El material de esta sección está en 2.1 Renombrado.sql 
 */
-
-
 /* -------------------------------------------------------------------------- */
-/* CREAMOS BBDD para trabajar */
 
-/* CASCADE: will automatically delete records in a child table where a foreign key relationship is in place
-*/
+/* CREAMOS BBDD para trabajar */
+-- CASCADE: will automatically delete records in a child table where a foreign key relationship is in place
 
 DROP TABLE IF EXISTS Ciudades CASCADE; 
 DROP TABLE IF EXISTS Empleados CASCADE;
@@ -414,6 +407,7 @@ select * from Empleados;
 
 /* -------------------------------------------------------------------------- */
 /* Select & Select as */
+/* -------------------------------------------------------------------------- */
 
 -- sin coma entre categoria y rango se interpreta como un rename
 SELECT DISTINCT categoria rango, salario euros
@@ -425,9 +419,7 @@ SELECT DISTINCT categoria as rango, salario as euros
 FROM empleados
 WHERE ciudad='Burgos';
 
-/* -------------------------------------------------------------------------- */
-/* MODIFICAMOS BBDD para PROBAR */
-
+-- MODIFICAMOS BBDD para PROBAR
 DROP TABLE IF EXISTS alumnos CASCADE;
 DROP TABLE IF EXISTS profesores CASCADE;
 
@@ -461,7 +453,6 @@ select * from alumnos;
 select * from profesores;
 
 /* -------------------------------------------------------------------------- */
-
 --Esto funciona en postgreSQL (mirar por separado) toma los valores de la primera relación
 -- comentar la compatibilidad de la unión entre integer-numeric // char-varchar
 --select * from profesores;
@@ -493,14 +484,12 @@ ORDER BY id, Ape1, Ape2; --este order by toma los valores despues de "as"
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
-/* 5. Producto Cartesiano (PC) */
+/* Producto Cartesiano (PC) */
 /* -------------------------------------------------------------------------- */
 /* 
 Nueva relación con:
 1) Todos los atributos de A X B (si hay campos comunes se repiten)
 2) Todas las combinaciones posibles entre las filas de las tablas A X B
-
-Nota. El material está en 3.1 Producto Cartesiano.sql
 */
 
 /* -------------------------------------------------------------------------- */
@@ -557,7 +546,7 @@ SELECT * from categoria;--{3,2}
 
 /* -------------------------------------------------------------------------- */
 /* Producto cartesiano (PC) de Oficinas X Empleado */
-
+/* -------------------------------------------------------------------------- */
 -- Haciendo un PC completo basta con agregar más tablas/relaciones en el FROM
 -- Revisar número de columnas (suma de atributos = suma de grados)
 -- Revisar número de filas (multiplicación de cardinalidades --> 2 oficinas X 5 empleados = 10 filas)
@@ -579,6 +568,7 @@ FROM oficina, empleado, categoria;
 
 /* -------------------------------------------------------------------------- */
 /* ALIAS DE TABLA */
+/* -------------------------------------------------------------------------- */
 /* 
 Para seleccionar una (o más) columnas de tablas independientes, el indexador es el punto.
 */
@@ -603,11 +593,14 @@ FROM oficina, empleado, categoria;
 SELECT oficina.*, empleado.*, categoria.*
 FROM oficina, empleado, categoria;
 */
-
 /* -------------------------------------------------------------------------- */
 
+
+/* ###-------------------------------------------------------------------------###
+# Operaciones BINARIAS (JOINS)
+###-------------------------------------------------------------------------### */
 /* -------------------------------------------------------------------------- */
-/* 6. Theta Join  */
+/* Theta Join  */
 /* -------------------------------------------------------------------------- */
 
 /* 
@@ -616,9 +609,7 @@ Sintaxis similar a Prod. Cartesiano pero con un Where selectivo (para incluir el
 
 El equi-join es igual pero solo para igualdades (theta solo puede ser "=").
 
-Nota. El material está en 4.2 Theta Join.sql
 */
-
 
 /* -------------------------------------------------------------------------- */
 /* CREAMOS BBDD para trabajar */
@@ -728,9 +719,7 @@ WHERE Oficina = n_Oficina
 AND comision*ventas/100 > objetivo/8;
 
 /* -------------------------------------------------------------------------- */
-/* HASTA AQUI MARTES 29 y JUEVES 31 OCTUBRE */
-/* -------------------------------------------------------------------------- */
-/* 7. Join Natural */
+/* Join Natural */
 /* -------------------------------------------------------------------------- */
 
 /* 
@@ -743,8 +732,6 @@ Se igualan los valores del PK de la Tabla Padre con los FK de la tabla Hija.
 
 Los campos en los que se unen deberían ser de igual nombre pero no siempre es así
 
-
-NOTA: El material está en 5.1 Sintaxis Tradicional del equi-Join en SQL.sql
 */
 
 
@@ -799,8 +786,8 @@ insert into EMPLEADO values
 select * from EMPLEADO;
 select * from CATEGORIA;
 select * from OFICINA;
-/* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
 -- Producto Cartesiano de Empleado X oficina (1º empleado) = 10 filas!
 SELECT *
 FROM Empleado, Oficina;
@@ -808,17 +795,16 @@ FROM Empleado, Oficina;
 
 /* -------------------------------------------------------------------------- */
 /* Join usando atributos de diferente nombre */
-
 -- Cada empleado debe salir con su oficina, por lo que agregamos la condicion de theta join
 -- Cada empleado sale solo con su padre por lo que Nº Filas = Nº Empleados --> 5 filas!
 SELECT *
 FROM Empleado, Oficina
 where oficina = n_oficina;
 
+
 /* -------------------------------------------------------------------------- */
 /* Join usando atributos de == nombre */
 /* Recalcar diferencias con R que no permite la indexación de tabla, pero sí el cambio de nombres */
-
 
 -- Ahora queremos cada empleado con su categoría (cargo)
 SELECT *
@@ -842,12 +828,9 @@ AND categoria.cargo = empleado.cargo; -- enganche entre categoria y empleado
 
 /* -------------------------------------------------------------------------- */
 /* AHORA CON CLAVE COMPUESTA */
-
-
 /* -------------------------------------------------------------------------- */
-
 --PARTE 2: Redefino las tablas haciendo que la clave de oficinas sea compuesta
---NOTA: El material está en 5.1 Sintaxis Tradicional del equi-Join en SQL.sql
+
 /* -------------------------------------------------------------------------- */
 /* CREAMOS BBDD para trabajar */
 
@@ -909,7 +892,7 @@ select * from EMPLEADO;
 
 /* 
 Join similar al anterior (== nombre) por lo que necesitamos indexación, pero como además
-una de las conexiones es una PK compuesta, necesitamos 2 Joins (un where y un and)
+una de las conexiones es una PK compuesta, necesitamos 2 Joins (un WHERE y un AND)
 */
 
 -- dos conexiones con = nombre		
@@ -988,7 +971,7 @@ WHERE ventas > 500000;
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/* 8. Join Externo */
+/* Join Externo (OUTER JOIN)*/
 /* -------------------------------------------------------------------------- */
 
 /* 
@@ -998,7 +981,6 @@ join interno no se mostrarán las celdas "vacías". En un Join externo forzaremo
 Ejemplo Oficinas: 
 "Por defecto las oficinas sin empleados no salen en un join, porque el join por defecto es el interno, pero en la práctica nos pueden pedir que sí que salgan (join externo)."
 
-NOTA: El material de esta sección está en 6.1. Joins Cualificados en SQL.sql
 */
 
 /* -------------------------------------------------------------------------- */
@@ -1055,10 +1037,8 @@ select * from categoria;
 select * from empleado;
 /* -------------------------------------------------------------------------- */
 
-
 /* -------------------------------------------------------------------------- */
 /* inner join tradicional */
-
 /* 
 Consiste en igualar clave ajena (oficina) con clave primaria (n_oficina) por cada dos tablas
 
@@ -1131,8 +1111,6 @@ UNION
 SELECT n_oficina, poblacion, region, ventas, objetivo, null, null, null, null
 FROM OficinasSinEmpleados;
 
-
-
 /* 
 Outer join en un solo paso (Sin usar la Vista) --YA NO SE USA!!
 Explicación Paso a paso, pero saltarla!
@@ -1170,18 +1148,17 @@ WHERE Oficina = n_Oficina;
 
 
 /* -------------------------------------------------------------------------- */
-/* 8.1 Joins Cualificados en SQL */
+/* Joins Cualificados en SQL */
 /* -------------------------------------------------------------------------- */
-
 /*
 Nueva Sintaxis a partir de 1992
 Vuelve a existir la equivalencia con R!
 El tipo de Join se especifica en la cláusula FROM
-NOTA: El material de esta sección está en 6.1. Joins Cualificados en SQL.sql
 */
 
 /* -------------------------------------------------------------------------- */
-/* 8.1.1 CROSS JOIN */
+/* CROSS JOIN */
+/* -------------------------------------------------------------------------- */
 
 -- representa el producto cartesiano
 -- prod.cartesiano empleados X oficina = 24 filas (8 empleadosX 3 Oficinas)
@@ -1194,9 +1171,9 @@ FROM Oficina, Empleado;
 
 
 /* -------------------------------------------------------------------------- */
-/* 8.1.2 INNER JOIN */
+/* INNER JOIN */
 /* Vuelve a haber código de R */
-
+/* -------------------------------------------------------------------------- */
 -- se puede hacer de la manera tradicional
 select * from oficina;
 select * from empleado;
@@ -1231,8 +1208,8 @@ FROM Oficina INNER JOIN Empleado ON (oficina=n_oficina and comision*ventas/100 >
 
 
 /* -------------------------------------------------------------------------- */
-/* 8.1.3 OUTER JOIN (Left/right/full) */
-
+/* OUTER JOIN (Left/right/full) */
+/* -------------------------------------------------------------------------- */
 -- Permite seleccionar qué tabla aporta el outer
 -- en este caso para que salgan todas las oficinas (incluso las que no tienen empleado --> n_oficina = 3)
 
@@ -1285,9 +1262,11 @@ FROM Oficina LEFT OUTER JOIN Empleado ON (
 
 /* -------------------------------------------------------------------------- */
 /* 8.1.4 (FULL) OUTER JOIN */
+/* -------------------------------------------------------------------------- */
 
 -- Ya que una FK no representa NOT NULL, es posible que haya elementos "NULL" en ambas partes de la unión
 -- todas las oficinas aunque no tengan empleados y todos los empleados aunque no tengan oficina
+
 SELECT Oficina.*, Empleado.*
 FROM Oficina FULL OUTER JOIN Empleado
 	ON (Oficina = n_Oficina);
@@ -1299,8 +1278,8 @@ FROM Oficina FULL OUTER JOIN Empleado ON (
 			and oficina=n_oficina);
 
 /* -------------------------------------------------------------------------- */
-/* 8.1.5 JOIN USING lista de campos */
-
+/* JOIN USING lista de campos */
+/* -------------------------------------------------------------------------- */
 /*
 Además de usar el ON se puede usar el USING y dar una lista de campos comunes separados por comas.
 
@@ -1366,8 +1345,8 @@ FROM Categoria INNER JOIN Empleado USING (Cargo);
 
 
 /* -------------------------------------------------------------------------- */
-/* 8.1.4 NATURAL JOIN */
-
+/* NATURAL JOIN */
+/* -------------------------------------------------------------------------- */
 /*
 No necesitamos indicar por qué campos debe hacer la búsqueda, simplemente el algoritmo busca
 aquellos campos comunes (nombre y dominio) y hace el Join
@@ -1404,7 +1383,7 @@ SELECT *
 FROM Categoria NATURAL FULL JOIN Empleado;
 
 /* -------------------------------------------------------------------------- */
-/* 8.2 Ejercicios de Joins*/
+/* Ejercicios de Joins*/
 /* -------------------------------------------------------------------------- */
 /*
 Dejarles que lo desarrollen ellos y dar punto a quién los resuelve
@@ -1412,7 +1391,7 @@ Página 45 apuntes Tema 3
 */
 
 /* -------------------------------------------------------------------------- */
-/* 8.2.1 Ejercicio 1 */
+/* Ejercicio 1 */
 
 /*
 2 Tablas con a1 y a2 dos campos en común.
@@ -1447,7 +1426,7 @@ select * from b;
 
 
 /* -------------------------------------------------------------------------- */
-/* 1.1 Utilizando ON y proyectando ( a1, a2, a3, a4, b3, b4) */
+/* Utilizando ON y proyectando ( a1, a2, a3, a4, b3, b4) */
 
 /*
 Atención que los campos repetidos a1 y a2 se solicitan sólo una vez.
@@ -1470,7 +1449,7 @@ select a.*, b3, b4
 from a join b on (a.a1 = b.a1 and a.a2 = b.a2);
 
 /* -------------------------------------------------------------------------- */
-/* 1.2 Utilizando USING y proyectando ( a1, a2, a3, a4, b3, b4) */
+/* Utilizando USING y proyectando ( a1, a2, a3, a4, b3, b4) */
 
 /*
 En este caso, al usar USING los campos comunes se proyectan solo individualmente
@@ -1482,7 +1461,7 @@ from a join b using (a1, a2);
 
 
 /* -------------------------------------------------------------------------- */
-/* 1.3 Utilizando NATURAL y proyectando ( a1, a2, a3, a4, b3, b4) */
+/* Utilizando NATURAL y proyectando ( a1, a2, a3, a4, b3, b4) */
 
 /*
 En este caso, al usar NATURAL los campos comunes se proyectan solo individualmente
@@ -1495,14 +1474,14 @@ from a natural join b;
 
 
 /* -------------------------------------------------------------------------- */
-/* 8.2.2 Ejercicio 2 */
+/* Ejercicio 2 */
 
 /*
 2 Tablas de profesores
 */
 
 /* -------------------------------------------------------------------------- */
-/* 2.1 Respondemos la preguna sin más */
+/* Respondemos la preguna sin más */
 
 /*
 -- se hace el JOIN usando IdProfesor que aparece en ambas, pero es PK en Profesores (identifica a c/profesor) y sin embargo es FK en asignaturas, ya que indica qué profe entrega cada asignatura pero puede repetirse ya que hay un profe que de más de una asignatura
@@ -1524,7 +1503,7 @@ NATURAL busca todos los campos con el mismo nombre y además de IdProfesor hay o
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/* 8.2.3 Ejercicio 3 */
+/* Ejercicio 3 */
 
 /* -------------------------------------------------------------------------- */
 /* CREAMOS BBDD para trabajar */
@@ -1580,7 +1559,7 @@ on (departamentos.presupuesto >= proyectos.presupuesto);
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-/* 8.2.4 Ejercicio 4 */
+/* Ejercicio 4 */
 
 /* -------------------------------------------------------------------------- */
 /* CREAMOS BBDD para trabajar */
@@ -1718,12 +1697,10 @@ from profesores left join asignaturas on (horascontrato < horasclase);
 
 
 /* -------------------------------------------------------------------------- */
-/* 9. El cociente relacional  ¡NO! */
+/* El cociente relacional  ¡NO! */
 /* -------------------------------------------------------------------------- */
 
 /* 
-Teoria_08_Parte5(Tema3)_El cociente relacional en SQLKaltura Video Presentation
-
 Es una operación Derivada y vamos a buscar una serie de pasos "elementales" para llevarlos a cabo.
 ¡NO EXISTE LA OPERACIÓN EN SQL COMO TAL!
 
@@ -1731,7 +1708,6 @@ Se revisa poco porque no se hace así...plop!
 
 Se usan restas, proyecciones y Productos cartesianos.
 
-NOTA: El material de esta sección está en 7.2. El cociente en SQL.sql
 */
 
 
