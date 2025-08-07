@@ -23,7 +23,6 @@ select * from alumnos;
 /*----------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------*/
 
-
 -- EJECUTARLOS NUEVAMENTE Y ANALIZAR ERROR 1
 -- EJECUTARLOS NUEVAMENTE DROP TABLE
 
@@ -154,7 +153,7 @@ insert into alumnos values (4, 'Maria');
 select * from alumnos; -- determina el orden según rapidez de ejecución
 
 --Diferencias de tamaño entre integer o smallint revisarlos en:
--- https://www.postgresql.org/docs/12/datatype-numeric.html
+-- https://www.postgresql.org/docs/current/datatype.html
 
 
 /*###-------------------------------------------------------------------------###*/
@@ -310,7 +309,7 @@ select * from alumnos;
 
 
 /*###-------------------------------------------------------------------------###*/
---NUMERIC con decimales -- Redondeo (poner más decimales que los especificados
+--NUMERIC con decimales -- Redondeo (poner más decimales que los especificados)
 
 drop table if exists alumnos;
 
