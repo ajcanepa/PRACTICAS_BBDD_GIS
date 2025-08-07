@@ -1,10 +1,14 @@
 /*----------------------------------------------------------------------------------*/
-/* 2.3 Declaración de claves ajenas */
 /*----------------------------------------------------------------------------------*/
-/* VIDEOS PRACTICA #3 PARTE #2 */
+/* GUIA CODIGOS TEMA 2 */
+/*----------------------------------------------------------------------------------*/
+-- PRÁCTICA 4: FOREIGN KEY
+-- Objetivo: Entender el uso y las restricciones del comando FOREIGN KEY
+
+/*----------------------------------------------------------------------------------*/
+/* Declaración de claves ajenas FOREIGN KEY */
 /*----------------------------------------------------------------------------------*/
 /* CLave Ajena Sencilla en Línea */
-
 /*
 Para mantener la F1N es necesario descomponer la tabla en más de una y es allí donde usamos las FK
 
@@ -12,7 +16,6 @@ Explicar al cargar las tablas cómo se mete la restricción de FK (References) y
 
 El orden de creación SÍ importa, se deben crear las tablas padres antes que las hijas! --probar
 
-Nota: El material está en la web en Ejemplos_FK_SQL.sql
 */
 
 /*----------------------------------------------------------------------------------*/
@@ -269,12 +272,10 @@ select * from estrellas;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 2.3 Declaración de claves ajenas */
-/*----------------------------------------------------------------------------------*/
-/* VIDEOS PRACTICA #3 PARTE #2 */
+/* Declaración de claves ajenas FOREIGN KEY */
 /*----------------------------------------------------------------------------------*/
 /* CLAVES AJENAS COMPUESTAS */
-
+/*----------------------------------------------------------------------------------*/
 /*
 Atributos han de estar declarados en el mismo orden que cómo estan declarados en la clave primaria.
 
@@ -282,13 +283,11 @@ Atributos deben ser del mismo tipo y longitud (características)
 
 Atributos NO tienen porqué llamarse igual
 
-Nota: El material está en la web en Ejemplos_FK_SQL.sql
 */
 
 /*----------------------------------------------------------------------------------*/
 /* Creamos DDBB para trabajar */
 /* FKs compuestas */
-
 
 -- Creamos una tabla peliculas que sea hija de las estrellas
 -- tendrán un único protagoista por cada película
