@@ -1,7 +1,12 @@
 /*----------------------------------------------------------------------------------*/
-/* 6. Subconsultas*/
 /*----------------------------------------------------------------------------------*/
-/* 6.1 Subconsultas no correlacionadas */ 
+/* GUIA CODIGOS TEMA 5 */
+/*----------------------------------------------------------------------------------*/
+/* Subconsultas*/
+/*----------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------*/
+/* Subconsultas no correlacionadas */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -12,9 +17,7 @@ No son obligatorias, pero las queries con subconsultas pueden ser más legibles 
 Ninguna subconsulta puede llevar ORDER BY, ya que el resultado de las subconsultas no se
 muestra al usuario.
 
-El resultado es siempre una única fila
-
-Nota: El material correspondiente a esta sección está en 6.1. Subconsultas no correlacionadas.sql
+El resultado es siempre una única fila.
 */
 
 
@@ -61,7 +64,7 @@ select * from categorias;
 select * from empleados;
 
 /*----------------------------------------------------------------------------------*/
-/* 6.1.1 Subconsultas en la SELECT */
+/* Subconsultas en la SELECT */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -111,7 +114,7 @@ FROM empleados;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 6.1.2 Subconsultas en el FROM */
+/* Subconsultas en el FROM */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -325,7 +328,7 @@ from (select count(*)as recuento
 
 
 /*----------------------------------------------------------------------------------*/
-/* 6.1.3 Subconsultas en el WHERE */
+/* Subconsultas en el WHERE */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -556,7 +559,7 @@ sal+comisión*ventas/100.
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 6.1.4 Subconsultas en el HAVING */
+/* Subconsultas en el HAVING */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -600,10 +603,11 @@ HAVING COUNT(*) = (SELECT MIN(nro)
 		          GROUP BY oficina ) AS T
 		   );
 */
+/*----------------------------------------------------------------------------------*/
+
 
 /*----------------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------------*/
-/* 6.1.5 La clausula WITH */
+/* La clausula WITH */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -683,7 +687,7 @@ Oficinas que tienen todos los cargos
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 6.2 Referencias Externas y Subconsultas Correlacionadas */
+/* Referencias Externas y Subconsultas Correlacionadas */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -774,12 +778,8 @@ WHERE sal > (SELECT SUM(cuota)
 
 
 /*----------------------------------------------------------------------------------*/
-/* 6.2.1 Cómo interpretar una subconsulta correlacionada */
+/* Cómo interpretar una subconsulta correlacionada */
 /*----------------------------------------------------------------------------------*/
-
-/* 
-Nota: el material correspondiente está en 6.2. Subconsultas correlacionadas.sql
-*/
 
 -- Se estudiará a partir de la consulta anterior:
 
@@ -827,7 +827,7 @@ AND n_oficina=3;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 6.2.2.1 Subconsultas correlacionadas en la SELECT */
+/* Subconsultas correlacionadas en la SELECT */
 /*----------------------------------------------------------------------------------*/
 
 /* 
@@ -836,7 +836,6 @@ correlacionadas: (i.e., siempre que devuelva una fila como máximo).
 
 Importante, en el primer caso veremos que dice que la oficina de la subconsulta es la misma que la de la consulta principal.
 
-Nota: el material correspondiente está en 6.2. Subconsultas correlacionadas.sql
 */
 
 -- el nombre de cada empleado con la diferencia de la comisión respecto del promedio de su oficina (observa como el “de su” delata/sugiere que necesitamos una correlacionada).
@@ -909,7 +908,7 @@ while haya vendedores que leer{
 
 
 /*----------------------------------------------------------------------------------*/
-/* 6.2.2.2 Subconsultas correlacionadas en el WHERE */
+/* Subconsultas correlacionadas en el WHERE */
 /*----------------------------------------------------------------------------------*/
 /* Correlacionadas en el where con ANY/ALL */
 
@@ -962,10 +961,8 @@ order by n_oficina;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 6.2.2.3 Subconsultas correlacionadas en el HAVING */
+/* Subconsultas correlacionadas en el HAVING */
 /*----------------------------------------------------------------------------------*/
-/*  */
-
 
 --Poblaciones en las que el promedio de la comision de sus oficinas es menor que el doble de la comision de todos sus empleados => hay mucha varianza en las comisiones (estan mal repartidas)
 
@@ -984,14 +981,8 @@ FROM oficinas JOIN vendedores ON(oficina=n_oficina);
 
 /*----------------------------------------------------------------------------------*/
 
-/* HASTA QUÍ EN EL CURSO 2021-22*/
-
-
-
-
-
 /*----------------------------------------------------------------------------------*/
-/* 6.2.3 Correlacionadas con EXISTS */
+/* Subconsultas Correlacionadas con EXISTS */
 /*----------------------------------------------------------------------------------*/
 /* 
 
@@ -1092,20 +1083,10 @@ WHERE not exists ( SELECT * FROM categorias
                                       WHERE oficina = n_oficina
                                       AND cargo = categorias.cargo));
 /*----------------------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------------------*/
-
-/* HASTA QUÍ EN EL CURSO 2020-21*/
-
-/*----------------------------------------------------------------------------------*/
-
 /*----------------------------------------------------------------------------------*/
 
 
-
-
 /*----------------------------------------------------------------------------------*/
-
 /*----------------------------------------------------------------------------------*/
 /* Ejercicio 16 */
 /*----------------------------------------------------------------------------------*/
@@ -1175,13 +1156,9 @@ WHERE EXISTS( SELECT *
 /* 
 Las subconsultas en la clausula HAVING nos proveen un mecanismo más sencillo, eficiente y
 versátil de realizar la operación de cociente relacional que los vistos hasta ahora. (Ejemplo Chicos conocen chicas)
-
-Nota: El material está en 6.3. Caso de Estudio. El cociente relacional mediante subconsulta en el HAVING.sql
- */
+*/
 
 -- La consulta que obtiene el cociente de los chicos que conocen a todas las chicas podría plantearse de una forma distinta a la que se mostró en el tema del álgebra relacional.
-
-
 
 /*----------------------------------------------------------------------------------*/
 /* Bases de datos para trabajar */
@@ -1256,7 +1233,6 @@ HAVING count(*) = ( SELECT COUNT(*) FROM Chicas);
 insert into CHICAS values	
 	 (7, 'Luisa',	'Negro',  'Instituto 1');
 
---################################################################################################
 -- en la tabla conocen, la misma chica puede parecer varias veces si es conocida por más de un chico.
 -- para contar cuantas chicas conocidas hay, hay que utilizar un COUNT(DISTINCT DNIChica):
 SELECT COUNT(DISTINCT DNIChica) FROM Conoce;

@@ -1,4 +1,3 @@
-
 # SUBCONSULTAS ------------------------------------------------------------
 # EN R las subconsultas las revisaremos solo mirando los joins.
 
