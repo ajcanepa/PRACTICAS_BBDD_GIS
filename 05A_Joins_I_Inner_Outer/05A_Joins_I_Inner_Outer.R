@@ -1,4 +1,4 @@
-# PRÁCTICA 6: Joins I – INNER y OUTER JOIN
+# PRÁCTICA 5A: Joins I – INNER y OUTER JOIN
 # Objetivo: Usar inner_join() y left_join() para combinar tablas.
 # Contexto: Relación entre pacientes y sus médicos asignados.
 

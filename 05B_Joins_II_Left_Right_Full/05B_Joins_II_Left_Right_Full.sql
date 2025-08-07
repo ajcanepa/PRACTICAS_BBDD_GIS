@@ -1,4 +1,4 @@
--- PRÁCTICA 7: Joins II – LEFT, RIGHT y FULL OUTER JOIN
+-- PRÁCTICA 5B: Joins II – LEFT, RIGHT y FULL OUTER JOIN
 -- Objetivo: Comprender las diferencias entre LEFT, RIGHT y FULL OUTER JOIN.
 -- Contexto: Relación entre citas médicas y resultados de laboratorio.
 
