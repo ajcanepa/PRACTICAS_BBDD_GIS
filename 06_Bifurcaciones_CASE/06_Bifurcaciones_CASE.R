@@ -1,8 +1,5 @@
 # TEMA 5 ------------------------------------------------------------------
 # Carga Paquetes ----------------------------------------------------------
-# install.packages("devtools")
-# devtools::install_github("tidyverse/dplyr")
-# devtools::install_github("tidyverse/lubridate")
 library(dplyr)
 library(lubridate)
 

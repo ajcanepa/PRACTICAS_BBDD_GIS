@@ -2,21 +2,16 @@
 /*----------------------------------------------------------------------------------*/
 /* GUIA CODIGOS TEMA 5 */
 /*----------------------------------------------------------------------------------*/
-
 /*----------------------------------------------------------------------------------*/
-/* 1. Construcciones de bifurcación CASE */ 
+/* Construcciones de bifurcación CASE */ 
 /*----------------------------------------------------------------------------------*/
-
 /*
 Sirve para instancias donde podemos re-codificar una variable.
 
 Se utiliza normalmente asociado al SELECT agregando un WHEN, un predicado lógico y un THEN para la recodificación.
 
 Si el valor de WHEN es positivo, se ejecuta el valor de THEN, de lo contrario salta al siguiente WHEN y así hasta llegar al ELSE.
-
-Nota: Los ejemplos de esta sección están en 1. Construcciones de bifurcación CASE.sql
 */
-
 
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
@@ -84,6 +79,7 @@ SELECT nombre,
 		ELSE 'No evaluado'
 	END, fechaMatricula
 FROM Alumnos;
+
 /*----------------------------------------------------------------------------------*/
 /* EJEMPLO CLUB DE NATACION */
 /*----------------------------------------------------------------------------------*/
@@ -155,7 +151,6 @@ insert into empleados values
 
 select * from empleados;
 /*----------------------------------------------------------------------------------*/
-
 /*
 1) Crearemos una columna nueva "categoria" en la que todos serán empleados y por eso usamos 'El Empleado' as Categoria.
 
