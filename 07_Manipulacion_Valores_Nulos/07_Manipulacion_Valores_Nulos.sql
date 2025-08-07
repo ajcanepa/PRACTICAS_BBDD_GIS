@@ -1,19 +1,17 @@
-
 /*----------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------------------*/
-/* 07. Manipulación de valores nulos */ 
+/* GUIA CODIGOS TEMA 5 */
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 7.1 Los nulos y las operaciones de SQL */ 
+/* Manipulación de valores nulos */ 
+/*----------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------------*/
+/* Los nulos y las operaciones de SQL */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
 Sobretodo revisaremos cómo afectan las operaciones en SQL
-
-Nota: Los ejemplos de esta sección están en 2.1. Los nulos y las operaciones de SQL.sql
 */
 
 
@@ -110,7 +108,7 @@ FROM Facturas;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 2.2 La lógica trivaluada */ 
+/* La lógica trivaluada */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -139,7 +137,7 @@ Importante para entender lo que va a mostrar un predicado WHERE
 
 
 /*----------------------------------------------------------------------------------*/
-/* 2.3 Predicados WHERE SQL y el nulo */ 
+/* Predicados WHERE SQL y el nulo */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -148,9 +146,6 @@ Consecuencias de la Lógica Trivaluada en operaciones lógicas como WHERE (tambi
 WHERE devuelve solo las filas para las que el resultado es TRUE y descarta FALSE y NULL.
 
 Sirve no solo para el WHERE, sino para el DELETE, UPDATE, etc.
-
-Video: Practica_04_Parte_8(Tema5)_Where_Null
-Nota: Los ejemplos de esta sección están en 2.3. Predicados WHERE SQL y el nulo.sql
 */
 
 
@@ -192,9 +187,9 @@ SELECT nombre FROM empleados WHERE salario IS NOT NULL;
 -- También se puede usar
 --SELECT nombre FROM empleados WHERE NOT salario IS NULL;
 
-
 /*----------------------------------------------------------------------------------*/
 /* WHERE, AND, OR y NULL */
+/*----------------------------------------------------------------------------------*/
 
 -- creamos una tabla especial con combinaciones de null y el resultado como comentarios
 drop table if exists alumnos cascade;
@@ -213,8 +208,10 @@ insert into alumnos values --peso>67  altura>1.70	peso>67 OR altura>1.70  sale?
 ('Maria', null, 60);       --F			N			N						No
 
 select* from alumnos;
+
 /*----------------------------------------------------------------------------------*/
 /* WHERE, OR y NULL */
+/*----------------------------------------------------------------------------------*/
 
 --seleccionamos aquellos que peso sea mayor que 67 ó que la altura mayor que 1.7 
 SELECT * FROM alumnos
@@ -235,6 +232,7 @@ WHERE peso>67 OR peso<=67 or peso is null;
 
 /*----------------------------------------------------------------------------------*/
 /* WHERE, AND y NULL */
+/*----------------------------------------------------------------------------------*/
 
 -- Borramos valores
 delete from alumnos;
@@ -257,19 +255,12 @@ WHERE peso>67 AND altura>1.70;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 2.4 Los nulos y CREATE TABLE */ 
+/* Los nulos y CREATE TABLE */ 
 /*----------------------------------------------------------------------------------*/
-
-/*
-Vídeo Practica_05_Parte_4(Tema5)_Nulos_Create_TableKaltura Video Presentation Aquí voy-
-
-
-Nota: Los ejemplos de esta sección están en 2.4. Los nulos y CREATE TABLE.sql
-*/
-
 
 /*----------------------------------------------------------------------------------*/
 /* NULL y CHECK */
+/*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
@@ -350,7 +341,6 @@ select * from empleados;
 
 /*----------------------------------------------------------------------------------*/
 /* UNIQUE con clave Compuesta */
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 
@@ -387,21 +377,16 @@ select * from vecinos;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 2.5 Los nulos y el join externo */ 
+/* Los nulos y el join externo */ 
 /*----------------------------------------------------------------------------------*/
-/* 2.5.1 Outer join sobre varias tablas */ 
-
-
+/* Outer join sobre varias tablas */ 
+/*----------------------------------------------------------------------------------*/
 /*
 ¿qué sucede cuando hay más de dos tablas en el from?
 El ejercicio 4 del Tema 3 era similar.
 
 Si nos piden "Todas" las filas (todos los inquilinos o todos los inmuebles) deberemos hacer un join externo
-
-Video: Practica_05_Parte_5(Tema5)_Null_y_Join_Externo
-Nota: El material de esta sección está en 2.5.1 Outer join sobre varias tablas.sql
 */
-
 
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
@@ -513,16 +498,12 @@ NATURAL RIGHT JOIN Inmuebles;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 2.5 Los nulos y el join externo */ 
+/* Los nulos y el join externo */ 
 /*----------------------------------------------------------------------------------*/
 /* 2.5.2 Condiciones WHERE sobre campos en los que el outer join genera valores nulos */ 
 
-
 /*
 Los problemas también pueden suceder al filtrar algunas filas donde tengamos nulos por hacer un OUTER JOIN
-
-Nota: El material de esta sección está en 2.5.2 Condiciones WHERE sobre campos en los que el
-outer join genera valores nulos.sql
 */
 
 
@@ -591,7 +572,7 @@ from equipos left join jugadoresInternacionales
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/*  2.6 Tratamiento de nulos con COALESCE */ 
+/*  Tratamiento de nulos con COALESCE */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -599,9 +580,6 @@ Permite reemplazar los NAs, por lo que se usa mucho en combinación con JOIN Ext
 
 La función va chequeando todos los valores que toman los argumentos de izquierda a
 derecha devolviendo el primero que no sea nulo. Si son todos nulos, devuelve nulo.
-
-Video: Practica_06_Parte_2(Tema5)_Función_Coalesce
-Nota: El material de esta sección está en 2.6. Tratamiento de Nulos con COALESCE.sql
 */
 
 
@@ -659,6 +637,7 @@ WHERE coalesce(nacidoEn, '¿?')='¿?';
 
 /*----------------------------------------------------------------------------------*/
 /* Ordenaciones y NULL*/ 
+/*----------------------------------------------------------------------------------*/
 
 -- postgreSQL deja a los NULLs al último (otros SGBD no)
 SELECT * FROM empleados order by bonus;
