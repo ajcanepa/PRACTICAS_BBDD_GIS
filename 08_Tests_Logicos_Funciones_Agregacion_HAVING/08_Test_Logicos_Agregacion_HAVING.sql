@@ -1,9 +1,12 @@
 /*----------------------------------------------------------------------------------*/
-/* 8. Algunos Tests Lógicos */ 
+/*----------------------------------------------------------------------------------*/
+/* GUIA CODIGOS TEMA 5 */
+/*----------------------------------------------------------------------------------*/
+/* TESTS LÓGICOS */ 
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 8.1 BETWEEN */ 
+/* BETWEEN */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -12,9 +15,6 @@ Sirve para determinar si los valores están dentro de un determinado rango (cerr
 Sirve también para mostrar aquellos valores ausentes en un rango de valores (rango complementario), expresado por la negación NOT X BETWEEN A AND B --> x < A OR X > B ".
 
 Se aplica a cualquier conjunto de datos ordenados (números, fechas, characteres)
-
-
-Nota: Los ejemplos de esta sección están en 3.1. BETWEEN.sql
 */
 
 
@@ -63,7 +63,7 @@ OR altura > 1.70;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* Usando BETWEEN y CHECK*/
+/* BETWEEN y CHECK*/
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 /* Sólo se discute la sintaxis, no se evaluarán ejemplos*/ 
@@ -81,7 +81,7 @@ CREATE TABLE ejemplo (
 
 
 /*----------------------------------------------------------------------------------*/
-/* 3.2 LIKE ó Búsqueda con Comodines */ 
+/* LIKE ó Búsqueda con Comodines */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -94,9 +94,6 @@ el porcentage (%) y el guión bajo (_), donde:
 _: un sólo caracter cualesquiera
 
 Actualmente se usa SIMILAR con Expresiones regulares para un fin similar, pero con búsquedas más complejas.
-
-
-Nota: Los ejemplos de esta sección están en 3.2. Búsqueda con Comodines.sql
 */
 
 
@@ -220,7 +217,7 @@ WHERE password LIKE '%^%$%' ESCAPE '^'; -- acento circunflejo
 
 
 /*----------------------------------------------------------------------------------*/
-/* 3.2.2 SIMILAR TO */ 
+/* SIMILAR TO */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -228,10 +225,8 @@ Mayor precisión que LIKE, ya que posee además de "%" y "_" otros metacaractere
 
 El punto (.) que es ampliamente usado por otros Lenguajes para indicar un caracter cualquiera, acá no se usa ya que para eso está el "_". 
 
-Nota: Los ejemplos de esta sección están Guía docente página 28 y 29.
+Nota: Los ejemplos de esta sección están Guía de clases página 28 y 29.
 EXPLICAR TABLA DE LA PÁGINA 29
-
-Los ejemplos de esta sección están en 3.2. Búsqueda con comodines.sql
 */
 
 
@@ -326,15 +321,13 @@ select * from ordenadores where ip similar to '___.[^0]%'; -- solo sale el de Pe
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 3.3 Test de Pertenencia */ 
+/* Test de Pertenencia */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
 Permite hacer búsquedas exactas.
 
 La sintaxis requiere que se escriba la función IN después de un atributo y luego de IN una lista de carcateres (o vector numérico o incluso subconsulta) dónde buscar esa coincidencia.
-
-Nota: El material de esta sección está en 3.3. Test de Pertenencia.sql
 */
 
 
@@ -377,7 +370,7 @@ WHERE NOT peso IN ( 67, 83);
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 3.3.1 CHECK con IN y su decodificación */ 
+/* CHECK con IN y su decodificación */ 
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
@@ -422,9 +415,8 @@ from socios;
 /*----------------------------------------------------------------------------------*/
 
 
-
 /*----------------------------------------------------------------------------------*/
-/* 4. Las Funciones de Agregación */ 
+/* Funciones de Agregación */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -433,12 +425,10 @@ Se utilizan para generar medidas resúmenes de filas (reducen la primera dimensi
 Se pueden utilizar sintácticamente a continuación del select.
 
 El resultado es un único valor (en ausencia de group by)
-
-Nota: Las consultas de esta sección están en 4. Las Funciones de Agregación.sql
 */
 
 /*----------------------------------------------------------------------------------*/
-/* 4.1 Funciones de Agregación sin Group By */ 
+/* Funciones de Agregación sin Group By */ 
 /*----------------------------------------------------------------------------------*/
 
 /* Creamos BBDD para trabajar */
@@ -502,7 +492,7 @@ WHERE provincia='BURGOS';
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 4.2 La función COUNT(<expresión>) y COUNT(*) */
+/* La función COUNT(<expresión>) y COUNT(*) */
 /*----------------------------------------------------------------------------------*/
 /*
 COUNT permite tanto el uso de un atributo como un * para indicar el número de elemntos (filas)
@@ -575,7 +565,7 @@ FROM alumnos;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 4.3 Las funciones MAX y MIN */
+/* Las funciones MAX y MIN */
 /*----------------------------------------------------------------------------------*/
 /*
 Mirar página 36 para el detalle
@@ -631,7 +621,7 @@ FROM alumnos WHERE nombre >= 'Pepe';
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 4.4 Las funciones SUM y AVG */
+/* Las funciones SUM y AVG */
 /*----------------------------------------------------------------------------------*/
 /*
 Mirar página 38 para el detalle
@@ -669,9 +659,9 @@ FROM alumnos;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 5. La clausulas GROUP BY y HAVING */ 
+/* La clausulas GROUP BY y HAVING */ 
 /*----------------------------------------------------------------------------------*/
-/* 5.1 GROUP BY */ 
+/* GROUP BY */ 
 /*----------------------------------------------------------------------------------*/
 
 
@@ -844,7 +834,7 @@ ORDER BY count(*) DESC;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 5.2 La clausula HAVING */ 
+/* La clausula HAVING */ 
 /*----------------------------------------------------------------------------------*/
 
 /*
@@ -856,7 +846,6 @@ Se usa normalmente después del GROUP BY (No mandatorio) y antes del ORDER BY.
 
 La sintaxis de HAVING pueden tener argumentos con predicado lógico; siempre incluidos en el GROUP BY
 
-Nota: El material correspondiente a esta sección está en 5.2. La clausula HAVING.sql
 */
 
 
@@ -927,8 +916,8 @@ HAVING SUM(ventas) > 100;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/* 5.2.1  Intercambiar HAVING y WHERE */ 
-
+/* Intercambiar HAVING y WHERE */ 
+/*----------------------------------------------------------------------------------*/
 --A veces la condicion HAVING puede ir en el WHERE, suele ir mas deprisa xq elimina filas antes
 
 -- más lento
@@ -949,8 +938,8 @@ HAVING SUM(ventas) > 100;
 
 
 /*----------------------------------------------------------------------------------*/
-/* 5.2.2  HAVING sin GROUP BY */ 
-
+/* HAVING sin GROUP BY */ 
+/*----------------------------------------------------------------------------------*/
 -- Se puede usar el HAVING sin el GROUP BY, pero hay que tener cuidado
 -- El resultado o da una fila o no da ninguna
 
@@ -964,22 +953,17 @@ HAVING AVG(Ventas)>100;
 SELECT SUM(ventas) FROM vendedores
 HAVING AVG(Ventas)>1000;
 /*----------------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------------*/
+
 
 /*----------------------------------------------------------------------------------*/
+/* Consultas con join externo y agrupamiento */ 
 /*----------------------------------------------------------------------------------*/
-/* 5.3 Consultas con join externo y agrupamiento */ 
-/*----------------------------------------------------------------------------------*/
-
 /*
 Es muy frecuente que las consultas con agrupamiento estén asociadas a un join entre una tabla
 (padre) a la que a cada fila le corresponden varias de la otra tabla (hija).
 
 El agrupamiento se hace de manera que cada fila de la tabla padre genera un grupo con una función
 sumaria aplicada sobre campos de la tabla hija.
-
-Nota: El material correspondiente a esta sección está en 5.3. Consultas con join externo y
-agrupamiento.sql
 */
 
 
@@ -1027,6 +1011,7 @@ insert into empleados values 	( 1, 'Pepe', 'OFI_1', 'VENDEDOR', 10),
 select * from oficinas;
 select * from categorias;
 select * from empleados;
+
 /*----------------------------------------------------------------------------------*/
 /* Consulta 1: Todas las oficinas con el numero de empleados de cada una.
 

@@ -573,4 +573,3 @@ categorias %>%
   group_by(cargo) %>% 
   #summarise_at(vars(everything()), ~sum(!is.na(.)))
   summarise_at(vars(nombre), ~sum(!is.na(.)))
-
