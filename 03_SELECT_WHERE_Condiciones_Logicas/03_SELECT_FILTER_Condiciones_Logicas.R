@@ -1,5 +1,5 @@
 # UTILIZACIÓN DE SELECT ---------------------------------------------------
-# Select se utiliza de una manera similar (aunqueno igual) en SQL y en R
+# Select se utiliza de una manera similar (aunque no igual) en SQL y en R
 rm(alumnos)
 
 alumnos <- tibble(nombre = character(),
@@ -270,8 +270,6 @@ alumnos %>%
   mutate(Apellido = c('Bastidas', 'Jimenez', 'Astorga', 'Gatica')) %>% 
   mutate(across(where(is.character), toupper)) 
 
-
-## HASTA AQUI MARTES 15 y JUEVES 17 DE OCTUBRE ## 
 # INSERT con sub-SELECT ---------------------------------------------------
 alumnos <- tibble(nombre = character(),
                   altura	= numeric(),

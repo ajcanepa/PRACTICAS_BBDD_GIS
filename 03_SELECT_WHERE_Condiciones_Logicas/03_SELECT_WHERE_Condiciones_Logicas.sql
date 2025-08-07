@@ -270,20 +270,11 @@ WHERE Nombre !='Juan'
 ORDER BY peso/(altura*altura) DESC;
 
 /*----------------------------------------------------------------------------------*/
+/* Eliminación de filas con DELETE */
 /*----------------------------------------------------------------------------------*/
-/* VIDEOS PRACTICA #2 PARTE #3 */
-/*----------------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------------*/
-/* 2.2.8 Eliminación de filas con DELETE */
-/*----------------------------------------------------------------------------------*/
-
 /*
-Delete se usa para borar filas que (podrían) cumplir una condición.
-
-Nota: Casi todas las consultas de esta sección están en PR2-05.sql
+DELETE se usa para borar filas que (podrían) cumplir una condición.
 */
-
 /*----------------------------------------------------------------------------------*/
 
 
@@ -346,14 +337,11 @@ WHERE round(peso/(altura*altura),3) > 28.7;
 SELECT * FROM alumnos;
 
 /*----------------------------------------------------------------------------------*/
-/* 2.2.9 Modificaciones de valores con UPDATE */
+/* Modificaciones de valores con UPDATE */
 /*----------------------------------------------------------------------------------*/
-
 /*
-Modifica por filas los valores de cada columna identificada con SET
+UPDATE modifica por filas los valores de cada columna identificada con SET
 Tiene una opción where (opcional) paraver en qué filas se modifica el valor
-
-Nota: Casi todas las consultas de esta sección están en PR2-05.sql
 */
 
 /*----------------------------------------------------------------------------------*/
@@ -393,25 +381,15 @@ SELECT * FROM alumnos;
 
 SELECT * FROM alumnos;
 
-/* HASTA AQUI MARTES 15 y JUEVES 17 DE OCTUBRE */
 /*----------------------------------------------------------------------------------*/
-/* 2.2.10 INSERT con sub-SELECT */
+/* INSERT con sub-SELECT */
 /*----------------------------------------------------------------------------------*/
-/* VIDEOS PRACTICA #2 PARTE #4 */
-/*----------------------------------------------------------------------------------*/
-
-
 /*
 Si a INSERT se adjunta una SELECT, y así las filas que devuelve dicha SELECT serán las que se inserten.
-
 Sirve además para copiar de una tabla a otra.
-
-Nota: Casi todas las consultas de esta sección están en PR2-05.sql
 */
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos DDBB para trabajar */
-
 -- necesitamos rescatar la relación alumnos
 
 DROP TABLE IF EXISTS alumnos;
@@ -474,8 +452,7 @@ SELECT * FROM altos;
 
 /*----------------------------------------------------------------------------------*/
 /* COPIAR DATOS DE TABLA II  */
-/* Usando CREATE TABLE ... AS  */
-
+/* Usando CREATE TABLE <nombre_tabla> AS  */
 /*
 El comando CREATE TABLE posee una sintaxis alternativa donde usa AS para especificar los campos que se tomarán desde otra relación
 */
@@ -488,7 +465,6 @@ FROM alumnos
 WHERE altura > 1.70;
 
 SELECT * FROM altos; -- Nº de decimales (máximo por defecto)
-
 
 -- Usando el AS sin especificar los campos
 -- usa el nombre de columna por defecto cuando hay expresiones
@@ -522,10 +498,6 @@ select *, peso/0.5 as nuevopeso from alumnos;
 /*----------------------------------------------------------------------------------*/
 /* 2.3 CREATE VIEW y DROP VIEW */
 /*----------------------------------------------------------------------------------*/
-/* VIDEOS PRACTICA #2 PARTE #5 */
-/*----------------------------------------------------------------------------------*/
-
-
 /*
 Una vista es una tabla virtual, no tiene filas propias y las calcula a pedido.
 Se crean con una sintaxis similar al anterior "SELECT AS" --> "CREATE VIEW AS"
@@ -554,6 +526,7 @@ insert into alumnos values 	( 'Pepe', 1.70, 67),
 				( 'Luis', 1.70, 83);
 
 select * from alumnos;
+
 /*----------------------------------------------------------------------------------*/
 /* CREAR UNA VISTA --> CREATE VIEW */
 
@@ -591,6 +564,7 @@ select * from alumnos;
 
 -- Ya no aparece porque el "CREATE VIEW" tiene un Where asociado y Ana ya NO cumple ese where
 select * from altos_v;
+
 /*----------------------------------------------------------------------------------*/
 /* BORRAR UNA VISTA --> DROP VIEW */
 
@@ -611,8 +585,4 @@ DROP TABLE alumnos cascade;
 /*----------------------------------------------------------------------------------*/
 /*
 La idea es ver qué pasa al revés, si al modificar una view, estaremos afectando a una tabla
-
-Para ello deberán continuar en el Vídeo Practica_02_Parte_6(Tema2)
-*/
-/*----------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------*/
