@@ -82,6 +82,8 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 * [SQL databases and R](https://datacarpentry.github.io/R-ecology-lesson/instructor/05-r-and-databases.html)
 * [SQL translation](https://solutions.posit.co/connections/db/advanced/translation/)
 * [DuckDB - RClient](https://duckdb.org/docs/stable/clients/r.html)
+* [orbital package - run predictions of tidymodels inside databases.](https://orbital.tidymodels.org/)
+* [Run predictions directly within a SQL database - Blog](https://posit.co/blog/running-tidymodel-prediction-workflows-inside-databases/)
 
 #### Herramientas para _Entity-Relationship Diagrams_ (**ERDs**)
 * [dm - Rpackage](https://github.com/cynkra/dm/)
