@@ -10,11 +10,6 @@
 /* Los nulos y las operaciones de SQL */ 
 /*----------------------------------------------------------------------------------*/
 
-/*
-Sobretodo revisaremos cómo afectan las operaciones en SQL
-*/
-
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 drop table if exists miTabla;
@@ -72,8 +67,6 @@ ADD COLUMN Campo5 CHAR(5) DEFAULT 'x';
 
 select * from miTabla;
 
--- Diferencias entre agregar un 'Blanco' de un NULL
--- en pgAdmin4 se mantienen las diferencias entre blanco y NULL (los antiguos no).
 INSERT INTO miTabla ( Campo1, Campo2, Campo3 )
 VALUES ('', ' ', null);
 
@@ -93,10 +86,7 @@ insert into facturas values (1, null, null), (2, 'Pepe', 10);
 
 select * from facturas;
 
--- Operaciones matemáticas sobre null darán null (desconocido)
--- Operaciones lógicas (concatenación) con null darán null.
 -- casi cualquier operación con un null dará un null.
-
 SELECT numFactura, 
 	total*1.15, 
 	'A la atencion de ' || razonSocial , 
@@ -140,15 +130,6 @@ Importante para entender lo que va a mostrar un predicado WHERE
 /* Predicados WHERE SQL y el nulo */ 
 /*----------------------------------------------------------------------------------*/
 
-/*
-Consecuencias de la Lógica Trivaluada en operaciones lógicas como WHERE (también en Check pero más adelante).
-
-WHERE devuelve solo las filas para las que el resultado es TRUE y descarta FALSE y NULL.
-
-Sirve no solo para el WHERE, sino para el DELETE, UPDATE, etc.
-*/
-
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 drop table if exists empleados cascade;
@@ -166,16 +147,13 @@ select * from empleados;
 /* WHERE y NULL */
 
 -- Testamos por mayores que un valor fijo
--- No debe salir Pepe ( es menor) y el desconocido debería quitarlo también.
 --Pepe>100=FALSE // Ana>100 = TRUE // Juan (null)>100 = NULL
 SELECT nombre FROM empleados WHERE salario>100;
 
---Si queremos sacar seleccionar a aquellos NULL usamos erróneamente...
---No devuelve nada porque si (efectivamente) es NULL lo oculta!
+--Si queremos seleccionar a aquellos NULL...
 SELECT nombre FROM empleados WHERE salario=NULL;
 
---Si queremos sacar seleccionar a aquellos NULL usamos correctamente...
---Devuelve verdadero si hay algún NULL y lo muestra!
+--Si queremos seleccionar a aquellos NULL usamos correctamente...
 SELECT nombre FROM empleados WHERE salario IS NULL;
 
 --Tampoco muestra filas para la negación de null, porque como uno de los miembros es null, entonces el resultado tiene un null y por ende no lo muestra 
@@ -214,21 +192,12 @@ select* from alumnos;
 /*----------------------------------------------------------------------------------*/
 
 --seleccionamos aquellos que peso sea mayor que 67 ó que la altura mayor que 1.7 
-SELECT * FROM alumnos
-WHERE peso>67 OR altura>1.70;
 
 --Si sólo pedimos los nombres
-SELECT nombre FROM alumnos
-WHERE peso>67 OR altura>1.70;
 
 --Deberían salir todos, pero no es así. Sólo sale Pepe y Ana, poque tienen algun valor
-SELECT * FROM alumnos
-WHERE peso>67 OR peso<=67;
 
 --Si queremos que aparezcan los null deberemos llamarlos usando IS NULL.
---SELECT * FROM alumnos
-SELECT nombre FROM alumnos
-WHERE peso>67 OR peso<=67 or peso is null;
 
 /*----------------------------------------------------------------------------------*/
 /* WHERE, AND y NULL */
@@ -265,12 +234,6 @@ WHERE peso>67 AND altura>1.70;
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 
-
-/*
-Los Check también tendrán valores TRUE, FALSE y NULL
-Reclamará sólo cuando esté seguro de que va a protestar (FALSE), y no hace nada cuando sea NULL
-*/
-
 drop table if exists empleados cascade;
 
 create table empleados(
@@ -293,7 +256,6 @@ insert into empleados values ( 3, 'Pepe', 50, 20);
 
 /*----------------------------------------------------------------------------------*/
 /* Not Null dentro del check como predicados lógicos, similar a anterior */
-
 
 drop table if exists empleados cascade;
 
@@ -381,13 +343,6 @@ select * from vecinos;
 /*----------------------------------------------------------------------------------*/
 /* Outer join sobre varias tablas */ 
 /*----------------------------------------------------------------------------------*/
-/*
-¿qué sucede cuando hay más de dos tablas en el from?
-El ejercicio 4 del Tema 3 era similar.
-
-Si nos piden "Todas" las filas (todos los inquilinos o todos los inmuebles) deberemos hacer un join externo
-*/
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 drop table if exists alquila, inmuebles, inquilinos cascade;
@@ -441,21 +396,17 @@ select * from inmuebles;
 
 /*----------------------------------------------------------------------------------*/
 /* 
-Mostrar cada inmueble (que salgan TODOS los inmuebles), 
-su alquiler y el nombre del inquilino
+Mostrar cada inmueble (TODOS los inmuebles), su alquiler y el nombre del inquilino
  */
-
 /*----------------------------------------------------------------------------------*/
 -- JOIN EXTERNO entre Inmuebles y Alquila
 
 -- Salen todos los inmuebles incluso los 2 que están vacíos
--- planta y letra salen una sola vez porque el JOIN NATURAL los usa a ellos.
 select *
 FROM (Inmuebles NATURAL LEFT JOIN Alquila);
 
 
 --Hacemos ahora el segundo JOIN con Inquilinos (SIN ESPECIFICAR EXTERNO)
--- Pasa que se pierden las dos filas con los inmuebles vacíos por los NULLs! ya que null y null jamás es verdadero (no hay match)
 select *
 FROM (Inmuebles NATURAL LEFT JOIN Alquila)
 		NATURAL JOIN Inquilinos;
@@ -500,13 +451,6 @@ NATURAL RIGHT JOIN Inmuebles;
 /*----------------------------------------------------------------------------------*/
 /* Los nulos y el join externo */ 
 /*----------------------------------------------------------------------------------*/
-/* 2.5.2 Condiciones WHERE sobre campos en los que el outer join genera valores nulos */ 
-
-/*
-Los problemas también pueden suceder al filtrar algunas filas donde tengamos nulos por hacer un OUTER JOIN
-*/
-
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
 drop table if exists equipos, jugadoresInternacionales cascade;
@@ -546,8 +490,6 @@ select * from jugadoresInternacionales;
 Página 18 Guía:
 Que se muestren todos los equipos, aunque no tengan jugadores internacionales (Join externo), y
 Que en el resultado sólo salgan jugadores españoles.
-
-Como han de estar todos los equipos, deben haber combinaciones con nulos porque hay ejemplos solo de internacionales
 */
 
 -- Forzamos primero a que salgan todos los equipos (hasta aquí bien)
@@ -574,15 +516,6 @@ from equipos left join jugadoresInternacionales
 /*----------------------------------------------------------------------------------*/
 /*  Tratamiento de nulos con COALESCE */ 
 /*----------------------------------------------------------------------------------*/
-
-/*
-Permite reemplazar los NAs, por lo que se usa mucho en combinación con JOIN Externo para cambiar el output de null, para que salga otra cosa.
-
-La función va chequeando todos los valores que toman los argumentos de izquierda a
-derecha devolviendo el primero que no sea nulo. Si son todos nulos, devuelve nulo.
-*/
-
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */ 
 drop table if exists empleados;
