@@ -5,13 +5,6 @@
 /*----------------------------------------------------------------------------------*/
 /* Construcciones de bifurcación CASE */ 
 /*----------------------------------------------------------------------------------*/
-/*
-Sirve para instancias donde podemos re-codificar una variable.
-
-Se utiliza normalmente asociado al SELECT agregando un WHEN, un predicado lógico y un THEN para la recodificación.
-
-Si el valor de WHEN es positivo, se ejecuta el valor de THEN, de lo contrario salta al siguiente WHEN y así hasta llegar al ELSE.
-*/
 
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
@@ -33,8 +26,7 @@ select * from alumnos;
 /*----------------------------------------------------------------------------------*/
 
 
--- Recodificamos una variable usando (case when then else). Mirar el resultado de:
--- Laura tiene sobresaliente con una nota medio rara (ni tan mal), pero IKER autocompletó el null!!
+-- Recodificamos una variable usando (case when y luego else).
 SELECT Nombre, nota
 	CASE
 		WHEN nota < 5 THEN 'Suspenso'
@@ -47,7 +39,7 @@ FROM Alumnos;
 /*----------------------------------------------------------------------------------*/
 
 -- Una manera de solucionar esto es quitando el ELSE (así no se completan los campos con valores por defecto) y Creamos la categoría para Sobresaliente.
--- Laura y Iker ahora NULL
+
 SELECT nombre,
 	CASE
 		WHEN nota < 5 THEN 'Suspenso'
@@ -84,13 +76,6 @@ FROM Alumnos;
 /* EJEMPLO CLUB DE NATACION */
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */
-
-/*
-Agregamos diferentes socios que estén codificados de diferente manera como Niño, Trabajador, Jubilado, VIP.
-
-Nos aseguramos que esos valores no puedan ser diferentes usando un check en línea
-
-*/
 
 drop table if exists socios;
 
