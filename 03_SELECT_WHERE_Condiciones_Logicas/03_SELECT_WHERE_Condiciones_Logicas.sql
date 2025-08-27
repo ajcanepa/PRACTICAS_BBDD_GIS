@@ -32,36 +32,18 @@ SELECT * FROM alumnos;
 /*###-------------------------------------------------------------------------###
 # SELECCIONAMOS LOS CAMPOS SELECCIONADOS POR COLUMNA*/
 
-select * from alumnos;	
-SELECT Nombre, Altura FROM Alumnos;
-
-SELECT Altura FROM Alumnos;
+SELECT * FROM alumnos;	
 
 /*###-------------------------------------------------------------------------###
 # QUE SE HACE CON LOS REPETIDOS -- UN SOLO CAMPO*/
 
-SELECT ALL Altura from Alumnos; -- ALL viene por defecto
-
-SELECT DISTINCT Altura from Alumnos; -- distinct muestra las diferentes
-
 /*###-------------------------------------------------------------------------###
 # QUE SE HACE CON LOS REPETIDOS -- VARIOS CAMPOS*/
 
-SELECT Altura, Peso FROM Alumnos; -- original
-
-SELECT ALL Altura, Peso FROM Alumnos; --all no influye
-
-SELECT DISTINCT Altura, Peso FROM Alumnos; -- mostrará combinaciones únicas!
-
-SELECT ALL nombre, altura FROM alumnos;
-SELECT ALL altura, nombre FROM alumnos;
-
-SELECT DISTINCT nombre, altura FROM alumnos; -- no hay cambios porque nombre es "primary key" / ó "unique"
---# es más lento --> usar distinct solo cuando haga falta
-
 /*
 ###-------------------------------------------------------------------------###
-# USO DE EXPRESIONES -- Funciones matemáticas (ver en la web)*/
+# USO DE EXPRESIONES 
+*/
 
 --# Calculo con aritmeticas
 SELECT nombre, peso/(altura*altura), altura/0.3048, peso/0.4536
@@ -83,32 +65,12 @@ SELECT 'Hola', nombre FROM alumnos; -- muestra la constante caracter 'Hola'
 
 SELECT 'Hola' , 7 , nombre FROM alumnos; -- agrega otra constante
 
---# string functions in sql (googlear!)
-
-SELECT 'Hola' || 'chic@s' , 7, nombre FROM alumnos; -- todo junto
-
-SELECT 'Hola' || '  ' ||'chic@s' as saludo, 7 as depto, nombre FROM alumnos; -- separado según espacios dentro de ''
-
 --# Concatenamos atributos
 select * from alumnos;
 SELECT 'Hola ' || nombre, * FROM alumnos; 
-SELECT 'Hola ' || altura, * FROM alumnos; 
 
---# Repetimos esto, pero por favor no lo hagan! cambia la clase de la columna!
-SELECT nombre, round(peso/(altura*altura),2) as peso, round(altura/0.3048,2)||' pies' as altura_pies, 
-round(peso/0.4536,2)||' libras' as peso
-FROM alumnos;
-
---# Agregando el título a la columna como un caracter separado por espacio pero nada más
-
-SELECT nombre, round(peso/(altura*altura),2) as IMC, round(altura/0.3048,2)||' pies' as Altura, 
-round(peso/0.4536,2)||' libras' as Peso 
-FROM alumnos;
 
 /*	
-###-------------------------------------------------------------------------###
-###-------------------------------------------------------------------------###
-# HOJA NUEVA! #
 ###-------------------------------------------------------------------------###
 # TRABAJAMOS CON OPERACIONES DE TIEMPO
 */
@@ -119,27 +81,10 @@ select *, current_date from alumnos;
 
 select *, current_date, current_date+7, current_date-7 from alumnos;
 
-select *, current_date as hoy, current_date+7 as proxima_semana, current_date-7 as semana_pasada  from alumnos;
-
---# Rango de días... resta entre fechas
-
-select *, current_date as hoy, current_date+7 as próxima_semana, current_date-7 as semana_pasada, current_date - '5-10-2020' as dias  from alumnos;
 /*
 ###-------------------------------------------------------------------------###
-# CERRAMOS LA HOJA NUEVA! #
-###-------------------------------------------------------------------------###
-*/
-
-/*
-###-------------------------------------------------------------------------###
-###-------------------------------------------------------------------------###
-### VIDEOS PRACTICA #2 PARTE #2 ###
-###-------------------------------------------------------------------------###
-
-# Continuamos con el código anterior PR2-02.sql
 # Filtra las filas (Tuplas)
 */
-
 
 select * from alumnos;
 	
@@ -153,22 +98,17 @@ WHERE peso=67; -- >, <, >=, <=, !=, =
 
 SELECT nombre, (altura-1)*100 as altura_cm, peso
 FROM alumnos
--- where altura_cm > peso; -- uso de expresiones
-WHERE (altura-1)*100 > peso; -- uso de expresiones
+-- WHERE altura_cm > peso; 
+WHERE (altura-1)*100 > peso; 
 
--- mas correcto?
-/*
-SELECT nombre, (altura-1)*100 as alt_cm, peso
-FROM alumnos
-where (altura-1)*100 as alt_cm > peso;
-	
-*/
+
 /*
 ###-------------------------------------------------------------------------###
 # CONECTORES LÓGICOS
 # NOT, AND, OR
 */
-SELECT * FROM Alumnos; --SEE ALL
+
+SELECT * FROM Alumnos; 
 
 SELECT nombre
 FROM Alumnos
@@ -177,7 +117,6 @@ AND altura=1.70;
 
 /*###-------------------------------------------------------------------------###*/
 --# ORDEN DE LOS CONECTORES LÓGICOS 
---# PRIMERO EJECUTA EL AND
 
 SELECT  * --nombre
 FROM Alumnos
@@ -191,7 +130,6 @@ AND (altura=1.70 OR peso > 80);
 
 /*###-------------------------------------------------------------------------###*/
 --# SEGUNDO EJEMPLO
---# PARENTESIS PRIMERO LUEGO EL NOT
 
 -- el nombre de alumnos donde el peso = 67 y altura = 1.70 ó que el peso > 80 y nombre no sea Juan
 SELECT * --nombre
@@ -199,13 +137,6 @@ FROM Alumnos
 WHERE (peso=67 AND altura=1.70)
 OR peso > 80 
 	AND NOT nombre = 'Juan';
-
---# REDUNDANDO EN LA IMPORTANCIA DE NOT
-SELECT nombre
-FROM Alumnos
-WHERE (peso=67 AND altura=1.70)
-OR peso > 80
-AND (NOT nombre = 'Juan');
 
 /*###-------------------------------------------------------------------------###*/
 --# COMPARADOR COMPLEMENTARIO
@@ -217,57 +148,15 @@ WHERE (peso=67 AND altura=1.70)
 OR peso>80
 AND nombre != 'Juan';
 
-SELECT Nombre
-FROM Alumnos
-WHERE nombre >= 'Juan';
-
-SELECT Nombre
-FROM Alumnos
-WHERE nombre > 'Juan'; -- orden alfabético
-
-
 /*
 ###-------------------------------------------------------------------------###*/
 --# ORDER BY
 
 SELECT Nombre, altura, peso
 FROM Alumnos
---ORDER BY altura;
-ORDER BY altura desc;
+ORDER BY altura;
+--ORDER BY altura desc;
 
-SELECT Nombre, altura, peso
-FROM Alumnos
-ORDER BY altura, peso;
-
-SELECT Nombre, altura, peso
-FROM Alumnos
-WHERE Nombre != 'Juan'
-ORDER BY altura, peso;
-
-SELECT Nombre, altura, peso
-FROM Alumnos
-WHERE Nombre != 'Juan'
-ORDER BY altura DESC, peso;
-
-SELECT Nombre, altura, peso
-FROM Alumnos
-WHERE Nombre !='Juan'
-ORDER BY altura DESC, peso DESC;
-
-SELECT Nombre, altura, peso
-FROM Alumnos
-WHERE Nombre !='Juan'
-ORDER BY altura, peso DESC;
-
-SELECT Nombre, altura, peso
-FROM Alumnos
-WHERE Nombre !='Juan'
-ORDER BY altura ASC, peso DESC;
-
-SELECT Nombre, altura, peso
-FROM Alumnos
-WHERE Nombre !='Juan'
-ORDER BY peso/(altura*altura) DESC;
 
 /*----------------------------------------------------------------------------------*/
 /* Eliminación de filas con DELETE */
@@ -318,23 +207,10 @@ SELECT * FROM alumnos
 order by peso/(altura*altura) desc; -- Buscar el primero
 
 -- Ordenando por nombre de atributo (when given)
-SELECT *, round(peso/(altura*altura),3) as imc FROM alumnos
-order by imc desc;
 
 -- Ordenando por operación de atributo (name not given)
-SELECT *, round(peso/(altura*altura),3) FROM alumnos
-order by round(peso/(altura*altura),3) desc;
 
 -- Ordenando por posición de atributo
-select * from alumnos;
-
-SELECT *, round(peso/(altura*altura),3) FROM alumnos
-order by 4 desc;
-
-DELETE FROM alumnos
-WHERE round(peso/(altura*altura),3) > 28.7;
-
-SELECT * FROM alumnos;
 
 /*----------------------------------------------------------------------------------*/
 /* Modificaciones de valores con UPDATE */
@@ -365,21 +241,9 @@ SELECT * FROM alumnos;
 
 -- Reemplazamos el valor de todas las filas (Asuencia de where)
 UPDATE alumnos
-SET peso=peso * 1.20;
 
-SELECT * FROM alumnos;
 
 -- Transformar los valores a UPPERCASE con la función upper
-UPDATE alumnos
-SET nombre=upper(nombre);
-
-SELECT * FROM alumnos;
-
-UPDATE alumnos
-SET nombre=lower(nombre);
-SELECT * FROM alumnos;
-
-SELECT * FROM alumnos;
 
 /*----------------------------------------------------------------------------------*/
 /* INSERT con sub-SELECT */
@@ -431,9 +295,7 @@ WHERE altura > 1.70; -- filtro para que se cumpla esta condicion de tuplas
 
 SELECT * FROM altos;
 
--- Como estamos rellenando todas las columnas, podríamos NO mencionarlas
--- ejemplo igual que anterior pero dejando columnas en blanco = todas
--- solo se usa si el Select (subconsulta) da valores a todos los campos
+
 INSERT INTO altos -- (nombre, pies) 
 SELECT nombre, peso/0.3048 
 FROM alumnos
@@ -487,11 +349,6 @@ FROM alumnos
 WHERE altura > 1.70;
 SELECT * FROM altos;
 
-/*
-select * from alumnos;
-select *, peso/0.5 as nuevopeso from alumnos;
-*/
-
 /*----------------------------------------------------------------------------------*/
 
 
@@ -500,10 +357,6 @@ select *, peso/0.5 as nuevopeso from alumnos;
 /*----------------------------------------------------------------------------------*/
 /*
 Una vista es una tabla virtual, no tiene filas propias y las calcula a pedido.
-Se crean con una sintaxis similar al anterior "SELECT AS" --> "CREATE VIEW AS"
-No es una copia de los datos (no hay tuplas) es una instrucción y puede servir para guardar una consulta.
-
-Nota: Casi todas las consultas de esta sección están en PR2-05.sql
 */
 
 
@@ -511,7 +364,6 @@ Nota: Casi todas las consultas de esta sección están en PR2-05.sql
 /* Creamos DDBB para trabajar */
 
 -- necesitamos rescatar la relación alumnos
-
 DROP TABLE IF EXISTS alumnos;
 
 CREATE TABLE alumnos (
@@ -538,7 +390,6 @@ WHERE altura > 1.70;
 
 SELECT * FROM altos_v;
 
--- si se modifican los datos en la tabla original (alumnos) sí se ven modificados en la vista
 
 /*
 DELETE FROM alumnos
@@ -546,7 +397,7 @@ WHERE nombre='Ana';
 */
 select * from alumnos;
 
--- Ya no hay valores porque se volvió a ejecutar y ahora ANA no estaba
+
 SELECT * FROM altos_v;
 
 -- agregamos a ANA nuevamente
@@ -562,7 +413,6 @@ where nombre='Ana';
 
 select * from alumnos;
 
--- Ya no aparece porque el "CREATE VIEW" tiene un Where asociado y Ana ya NO cumple ese where
 select * from altos_v;
 
 /*----------------------------------------------------------------------------------*/
@@ -572,7 +422,7 @@ select * from altos_v;
 DROP VIEW altos_v ;
 
 -- qué pasa si quiero borrar una tabla de dónde depende una vista?
-DROP TABLE alumnos; -- error de dependencia
+DROP TABLE alumnos; 
 
 -- Primero borramos la vista y luego...
 DROP VIEW altos_v;
