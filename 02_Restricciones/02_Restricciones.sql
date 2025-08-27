@@ -46,7 +46,7 @@ select * from alumnos;
 --1: Insertamos meter un valor mayor de decimales para ver el redondeo
 insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
 
-insert into alumnos values (null, 'Juan', null, null, 9.6666666); -- error NOT NULL (comment --)
+insert into alumnos values (null, 'Juan', null, null, 9.6666666); 
 
 select * from alumnos;
 
@@ -69,10 +69,10 @@ insert into alumnos values (1, 'Pepe'),  (2, 'Ana'),  (3, 'Juan') ;
 insert into alumnos values (4, 'Maria', 'León');
 
 --Insert null opción 1
-insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
+insert into alumnos values (5, null, 'Burgos'); 
 
 --Insert null opción 2
-insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
+insert into alumnos (cod, ciudad) values (6, 'Burgos'); 
 
 --1: Insertamos meter un valor mayor de decimales para ver el redondeo
 insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
@@ -81,10 +81,7 @@ select * from alumnos;
 
 
 /*###-------------------------------------------------------------------------###*/
---# PRIMARY KEY Campo o combinacion de campos
---# 1 No permite valores repetidos
-
---# En nuestro caso el código del alumno.
+--# PRIMARY KEY (Campo o combinacion de campos)
 
 drop table if exists alumnos;
 
@@ -99,12 +96,14 @@ nota     numeric(4,2)
 insert into alumnos values (1, 'Pepe'),  (2, 'Ana'),  (3, 'Juan') ; 
 
 insert into alumnos values (4, 'Maria', 'León');
---insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
---insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
+--insert into alumnos values (5, null, 'Burgos'); 
+--insert into alumnos (cod, ciudad) values (6, 'Burgos'); 
+
 insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
 select * from alumnos;
+
 --# Impide valores repetidos (probar)
-insert into alumnos values (8, 'Luisa', null, 123, 9.5); --Error PK 
+insert into alumnos values (8, 'Luisa', null, 123, 9.5); 
 insert into alumnos values (9, 'Ximena', null, null, 9.5); 
 
 select * from alumnos;
@@ -112,9 +111,6 @@ select * from alumnos;
 
 /*###-------------------------------------------------------------------------###*/
 --# PRIMARY KEY Campo o combinacion de campos
---# 2 No permite NOT NULL, lo contiene! así que not null está de sobra
-
---# En nuestro caso el código del alumno.
 
 drop table if exists alumnos;
 
@@ -130,25 +126,23 @@ insert into alumnos values (1, 'Pepe'),  (2, 'Ana'),  (3, 'Juan') ;
 
 insert into alumnos values (4, 'Maria', 'León');
 
---insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
+--insert into alumnos values (5, null, 'Burgos'); 
 
---insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
+--insert into alumnos (cod, ciudad) values (6, 'Burgos'); 
 
 insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
 
 --# Impide valores repetidos (probar)
---insert into alumnos values (7, 'Luisa', null, null, 9.5); --Error PK 
+--insert into alumnos values (7, 'Luisa', null, null, 9.5); 
 
 --# Impide valores null
-insert into alumnos values (null, 'lucho', null, null, 9.5); --Error PK 
-
+insert into alumnos values (null, 'lucho', null, null, 9.5); 
 
 select * from alumnos;
 
 /*###-------------------------------------------------------------------------###*/
 --# UNIQUE
---# NO PUEDEN HABER MAS DE 1 PK, intentar con teléfono y fallará
-
+--# NO PUEDEN HABER MAS DE 1 PK
 --# Para evitar que el teléfono se repita se puede usar un UNIQUE (o cuantos haga falta!)
 
 drop table if exists alumnos;
@@ -166,31 +160,9 @@ select * from alumnos;
 
 insert into alumnos values (4, 'Maria', 'León');
 
---insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
-
---insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
-
-insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
-
---# Impide valores repetidos (probar)
---insert into alumnos values (7, 'Luisa', null, null, 9.5); --Error PK 
-
---# Impide valores null
---insert into alumnos values (null, 'lucho', null, null, 9.5); --Error PK 
-
---# METEMOS TELEFONO 1
-insert into alumnos values (7, 'Antonio', null, 947123123, 9.6666666); 
-
---# METEMOS TELEFONO 2
-insert into alumnos values (8, 'Luisa', null, 947123123, 9.6666666); --Error UNIQUE 
-
-select * from alumnos;
 
 /*###-------------------------------------------------------------------------###*/
 --# UNIQUE
---# REPETIR UNIQUE y conversar acerca de los NULL porque parece que se repite el null, pero en realidad no es un valor!
-
---# Para evitar que el teléfono se repita se puede usar un UNIQUE (o cuantos haga falta!)
 
 drop table if exists alumnos;
 
@@ -205,24 +177,6 @@ nota     numeric(4,2)
 insert into alumnos values (1, 'Pepe'),  (2, 'Ana'),  (3, 'Juan') ; 
 
 insert into alumnos values (4, 'Maria', 'León');
-
---insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
-
---insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
-
-insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
-
---# Impide valores repetidos (probar)
---insert into alumnos values (7, 'Luisa', null, null, 9.5); --Error PK 
-
---# Impide valores null
---insert into alumnos values (null, 'lucho', null, null, 9.5); --Error PK 
-
---# METEMOS TELEFONO 1
-insert into alumnos values (7, 'Antonio', null, 947123123, 9.6666666); 
-
---# METEMOS TELEFONO 2
-insert into alumnos values (8, 'Luisa', null, 947123124, 9.6666666); 
 
 select * from alumnos;
 
@@ -250,24 +204,6 @@ insert into alumnos values (7, 'Fran', null, null, 0);
 select * from alumnos;
 
 
---insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
---insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
-
-insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
-insert into alumnos values (9, 'Jacinta', 'Manhattan', null, 0); 
-select * from alumnos;
---# Impide valores repetidos (probar)
---insert into alumnos values (7, 'Luisa', null, null, 9.5); --Error PK 
-
---# Impide valores null
---insert into alumnos values (null, 'lucho', null, null, 9.5); --Error PK 
-
---# METEMOS TELEFONO 1
-insert into alumnos values (7, 'Antonio', null, 947123123, 9.6666666); 
-
---# METEMOS TELEFONO 2
-insert into alumnos values (8, 'Luisa', null, 947123124, 9.6666666); 
-
 select * from alumnos;
 
 
@@ -288,33 +224,10 @@ insert into alumnos values (1, 'Pepe'),  (2, 'Ana'),  (3, 'Juan') ;
 
 insert into alumnos values (4, 'Maria', 'León');
 
---insert into alumnos values (5, null, 'Burgos'); -- error NOT NULL (Comment --)
-
---insert into alumnos (cod, ciudad) values (6, 'Burgos'); -- error NOT NULL (Comment --)
-
-insert into alumnos values (7, 'Antonio', null, null, 9.6666666); 
-
---# Impide valores repetidos (probar)
---insert into alumnos values (7, 'Luisa', null, null, 9.5); --Error PK 
-
---# Impide valores null
---insert into alumnos values (null, 'lucho', null, null, 9.5); --Error PK 
-
---# METEMOS TELEFONO 1
-insert into alumnos values (7, 'Antonio', null, 947123123, 9.6666666); 
-
---# METEMOS TELEFONO 2
-insert into alumnos values (8, 'Luisa', null, 947123124, 12); -- error CHECK
-
 select * from alumnos;
-
-/*###-------------------------------------------------------------------------###
-# CAMBIO DE HOJA A LA DE Time
 
 ###-------------------------------------------------------------------------###
 --# DATE time/Data 
---¡En hoja nueva!
-*/
 
 drop table if exists ejemplo_tiempos;
 
@@ -349,16 +262,6 @@ fecha_hora timestamp check (fecha_hora >= current_timestamp)
 insert into ejemplo_tiempos values ('04-06-2018');
 select * from ejemplo_tiempos;
 	
---# 2: metemos también un tiempo
---insert into ejemplo_tiempos values ('04-06-2018','21:20:56');
-insert into ejemplo_tiempos values ('04-06-2018', '21:20:56', '2023-10-05 18:36:47.687262+02');
-select * from ejemplo_tiempos;
-
---# 3: metemos también un timestamp
---insert into ejemplo_tiempos values ('04-06-2018', '21:20:56', '2023-10-02 18:49');
-insert into ejemplo_tiempos values ('04-06-2018', '21:20:56', current_timestamp);
-select * from ejemplo_tiempos;
-	
 
 /*###-------------------------------------------------------------------------###*/
 --# CURRENT current_timestamp como valor por defecto
@@ -369,13 +272,6 @@ create table registro (
 idEmpleado integer,
 hora_entrada timestamp default current_timestamp
 );
-
-insert into registro values (100); -- el valor de la hora lo coge del sistema
-select * from registro;
-	
---# Manera correcta para que no coja el valor por defecto!
-insert into registro (idEmpleado, hora_entrada) values (2, null);
-select * from registro;
 
 
 /*###-------------------------------------------------------------------------###
@@ -425,7 +321,6 @@ select * from alumnos;
 /*###-------------------------------------------------------------------------###*/
 --# CONSTRAINT 2 a la primary key/not null, etc
 
-
 drop table if exists alumnos;
 
 create table alumnos (
@@ -464,7 +359,7 @@ select * from alumnos;
 
 /*
 ###-------------------------------------------------------------------------###
-# RESTRICCIONES COMPUESTAS # VIDEO Pracica 1 parte 6
+# RESTRICCIONES COMPUESTAS
 # AQUELLAS QUE AFECTAN A VARIOS CAMPOS SIMULTANEAMENTE, ES DECIR QUE NO EXISTAN DÚPLICAS EN COMBINACIONES DE ATRIBUTOS
 # EJEMPLO TABLA DE Asignaturas EN LOS APUNTES TEMA2 (Copiar/Pegar en hoja nueva de la página 22)
 */
