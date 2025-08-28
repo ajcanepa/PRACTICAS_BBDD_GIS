@@ -9,18 +9,6 @@
 /* Subconsultas no correlacionadas */ 
 /*----------------------------------------------------------------------------------*/
 
-/*
-Las subconsultas son comandos SELECT dentro de otro comando SQL.
-
-No son obligatorias, pero las queries con subconsultas pueden ser más legibles e intuitivas de formular.
-	
-Ninguna subconsulta puede llevar ORDER BY, ya que el resultado de las subconsultas no se
-muestra al usuario.
-
-El resultado es siempre una única fila.
-*/
-
-
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */ 
 drop table if exists oficinas cascade;
@@ -67,37 +55,26 @@ select * from empleados;
 /* Subconsultas en la SELECT */
 /*----------------------------------------------------------------------------------*/
 
-/* 
-En esta consulta por cada empleado, además de los campos cod, nombre y comision, de cada uno, aparecería una cuarta columna que siempre contendría el mismo valor: la comisión de una empleada llamada Alicia XX....
-*/
-
--- funciona --> sintácticamente correcto, pero:
 -- la cuarta columna es constante y parece poco útil.
 select cod, nombre, comision, (select comision from empleados 
 				where nombre like 'Alicia%')
 from empleados;
 
 -- Si no hay un nombre que haga el WHERE, entonces devuelve NULL
---no hay ataulfo => la cuarta columna es null
 select cod, nombre, comision, (select comision from empleados 
 				where nombre='ataulfo')
 from empleados;
 
 -- Si el WHERE es muy general y hay más de una fila resultante, entonces falla
--- En este caso hay mas de un empleado que tiene una "a" en su nombre
-select * from empleados;
-
 select cod, nombre, comision, (select comision from empleados 
 				where nombre like '%a%')
 from empleados;
 
 
-/* 
-mostrar los nombres de los empleados junto con la desviación de su comisión respecto de la comisión media de los empleados de Burgos
-*/
+/*----------------------------------------------------------------------------------*/
+-- mostrar los nombres de los empleados junto con la desviación de su comisión respecto de la comisión media de los empleados de Burgos
 
 -- obtenemos una fila por cada empleado con su nombre y la diferencia entre su comisión y la media de las comisiones que se pagan en las oficinas de Madrid
-
 -- Primero: Calculamos el promedio 
 SELECT AVG(comision)
 FROM empleados, oficinas
@@ -116,13 +93,6 @@ FROM empleados;
 /*----------------------------------------------------------------------------------*/
 /* Subconsultas en el FROM */
 /*----------------------------------------------------------------------------------*/
-
-/* 
-Se basa en crear una consulta sobre una tabla intermedia que se crea en la primera consulta
-
-Es bueno poner un nombre "un Alias" a la tabla temporal y así la consulta externa llame a esa nueva tabla.
-*/
-
 -- Se le entrega un nombre a la tabla temporal creada
 SELECT * FROM empleados;
 	  
@@ -149,7 +119,7 @@ FROM (SELECT * FROM empleados
 SELECT cargo, comision*1.15 as comision
 FROM (SELECT * FROM empleados
 	WHERE comision > 20) temporal;
-	--WHERE comision >= 20) temporal; -- suconsultas en el FROM Sí pueden dar más de una fila.
+	--WHERE comision >= 20) temporal; 
 	
 /*----------------------------------------------------------------------------------*/
 
@@ -165,84 +135,11 @@ SELECT sqrt(AVG(POW( comision, 2)) - POW(AVG( comision ), 2 ) )
 FROM empleados;
 
 -- Segunda fórmula, paso a paso
--- promedio
-SELECT avg(comision) FROM empleados;
-
--- Lo llevamos a una subconsulta en la SELECT y de allí sacamos las diferencias al cuadrado
-SELECT (comision - (SELECT avg(comision) FROM empleados))
-	 *(comision - (SELECT avg(comision) FROM empleados))
-FROM empleados;
-
--- O mejor aún, utilizaremos la función pow (potencia) para evitar que calcule dos veces la subconsulta.
-SELECT POW(comision - (SELECT avg(comision) FROM empleados), 2)
-FROM empleados;
-
--- haremos el promedio de ese resultado parcial
-SELECT AVG(diferencias)
-FROM (SELECT pow(comision - (SELECT avg(comision)
-			     FROM empleados)      
-		, 2) diferencias
-       FROM empleados)   AS tablaDiferencias;
-
-
--- A la tabla del resultado parcial la hemos llamado tablaDiferencias (tiene un único campo)
--- Nota cómo al utilizar para ese campo el alias diferencias, hemos podido usarlo en AVG(diferencias).
--- Finalmente aplicamos la raíz cuadrada
-SELECT sqrt(AVG(diferencias))
-FROM (SELECT pow(comision - (SELECT avg(comision)
-			     FROM empleados)      
-		, 2) diferencias
-       FROM empleados)   AS tablaDiferencias;
-/*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-/*Ejercicio 10
-
---chicos que conocen a todas las chicas
-select dnichico 
-from(select dnichico from chicos
-	 except
-	 select dnichico from
-	 (select dnichico,dnichica from chicos,chicas
-	 except
-	 select dnichico,dnichica from conoce  as temporal)
-	 as temporal2)
-	 as conoceatodas;
-
-SELECT nombre FROM Chicos
-EXCEPT
-SELECT nombre
-FROM (select DNIchico, DNIChica, chicos.nombre
-FROM Chicos, Chicas
-EXCEPT
-SELECT DNIChico, DNIChica, chicos.nombre
-FROM Conoce join chicos using(DNIchico)) as parejasIrreales;
 
 
- --Oficinas que tienen todos los cargos (delete from categorias where cargo='SECRETARIO';)
-select * from oficinas;
-select * from empleados;
-
-select n_oficina from oficinas
-except
-select n_oficina
-from (select n_oficina, cargo
-	 from oficinas, categorias
-	 except
-	 select oficina as n_oficina, cargo
-	 from empleados) as resta;
-
--- solución = 0 --> no hay oficina con todos los cargos.
-
--- otra solucion
-select oficina from empleados except
-select n_oficina from (select n_oficina, cargo from oficinas cross join categorias
-                                         except select oficina, cargo from empleados) temporal;
-
- 
-*/
 /*----------------------------------------------------------------------------------*/
-
 --Las subconsultas en el FROM para emular el anidamiento de funciones sumarias
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */ 
@@ -277,77 +174,15 @@ SELECT MAX(promedio) FROM (
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
-
 /*Ejercicio 11
-1). Hallar la mínima comisión de entre las comisiones máximas de cada ciudad. => MIN(MAX))
-
-/* Solución Alumnos
-select min(max) from (select max(comision) from empleados join oficinas on (oficina = n_oficina) group by poblacion) as tem;
-
--- Solución: 15.00
-
---otra opción
-select min(comision) from
-(select oficina, max(comision) comision from empleados group by oficina)AS comisiones;
-
-select min (max_c)
-from (select max(comision) max_c
-	from empleados join oficinas on(oficina=n_oficina)
-	group by poblacion) as maximos
-
-select min(max_ciudad) 
-from (select poblacion, max(comision) as max_ciudad 
-from empleados join oficinas on (n_oficina=oficina) group by (poblacion)) temporal;
-
-*/
-
-
-2). Hallar el número promedio de empleados que hay en cada oficina. => AVG( COUNT())
-
-/* Solución Alumnos
-Select avg(count) from (select count(nombre) from empleados join oficinas on(oficina=n_oficina) group by oficinas) as temporal;
-
--- Solución: 2.00
-
--- otra opción
-select avg(promedio) from
-(select oficina, count(empleados) promedio from empleados group by oficina)AS promedios;
-
-select avg(comision) from (select oficina, count(comision)
-  comision from empleados group by oficina) as comision;
-
-select avg(recuento)
-from (select count(*)as recuento
-	 from empleados
-	 group by oficina) Y;
-
-*/
-
-*/
-/*----------------------------------------------------------------------------------*/
+1). Hallar la mínima comisión de entre las comisiones máximas de cada ciudad. 
 
 
 /*----------------------------------------------------------------------------------*/
 /* Subconsultas en el WHERE */
 /*----------------------------------------------------------------------------------*/
-
-/* 
-Tradicionalmente WHERE ha sido el punto donde han ido las subconsultas SQL
-
-Tenemos dos casos:
-• Que la subconsulta devuelva cero o una fila.
-• Que devuelve un número de filas mayor que uno.
-
-*/
-
 /*----------------------------------------------------------------------------------*/
 /* Fila Única */
-/*
-1) Se pueden utilizar cualquier a de los comparadores (=, !=, >, <, >=, <=) ó incluso predicados como el LIKE, SIMILAR TO
-
-2) Muchas veces un JOIN facilita el uso de una subconsulta, siempre prefiere el JOIN!
- */
-
 
 -- Siempre es mejor hacer un JOIN cuando se puede resolver con un JOIN
 select * from empleados;
@@ -387,18 +222,11 @@ WHERE Oficina = (SELECT n_Oficina
 -- SIEMPRE CORRECTO: La subconsulta devuelve una función sumaria y no tiene agrupamiento
 
 -- Qué empleados tienen un valor en el campo salario por encima de la media
-SELECT * FROM empleados natural join categorias
-WHERE sal > (SELECT AVG(sal)
-		FROM empleados natural join categorias);
-
 
 -- SIEMPRE CORRECTO: La subconsulta filtre por una clave, ya que el valor de una clave sólo puede tomarlo una fila a lo sumo
 
 -- Qué empleados tienen un salario superior al 50% de las ventas de la oficina OFI_1
-SELECT * FROM empleados natural join categorias
-WHERE sal > 0.5*(SELECT ventas
-		FROM oficinas
-		WHERE n_Oficina='OFI_1');
+
 /*----------------------------------------------------------------------------------*/
 
 
@@ -406,38 +234,9 @@ WHERE sal > 0.5*(SELECT ventas
 /*Ejercicio 12
 1. Obtener el nombre del empleado con la comisión máxima.
 
-/* Solución Alumnos
-select nombre from empleados 
-where comision = (select max(comision) from empleados);
-
--- Solución: Alicia
-				 
-*/
-
 
 2. Hallar el empleado que más gana, teniendo en cuenta que el sueldo se calcula como
 sal+comisión*ventas/100.
-
-/* Solución Alumnos
-select nombre from empleados left join categorias on (empleados.cargo = categorias.cargo) 
-join oficinas on (n_oficina = oficina) where sal+comision*ventas/100 = (select max(sal+comision*ventas/100) 
-from empleados left join categorias on (empleados.cargo = categorias.cargo) join oficinas on (n_oficina = oficina));
-
--- Solución: Alicia
-
--- otras soluciones
-select nombre, sal+comision*ventas/100
-from empleados join oficinas on(oficina=n_oficina) natural join categorias
-where sal+comision*ventas/100 > ( select avg(sal+comision*ventas/100)
-from empleados join oficinas on(oficina=n_oficina) natural join categorias);
-
-select nombre from(select *, (sal+comision*ventas/100) as salario 
-from empleados natural join (categorias natural join oficinas)  as temporal)  as mayorsueldo
-where salario=(select max(salario) from (select *, (sal+comision*ventas/100) as salario 
-from empleados natural join (categorias natural join oficinas)  as temporal2)as temporal3);
-
-*/
-
 
 */
 /*----------------------------------------------------------------------------------*/
@@ -445,7 +244,6 @@ from empleados natural join (categorias natural join oficinas)  as temporal2)as 
 
 /*----------------------------------------------------------------------------------*/
 /* Fila Múltiples */
-
 /*
 Para poder operar con subconsultas que devuelven varias filas tenemos varios operadores: ANY, ALL, EXISTS, IN y SOME.
 
@@ -459,7 +257,6 @@ Si un valor es >= que ALL, significa que es >= que el máximo
 Si un valor es < que ALL, significa que es < que el mínimo
 Si un valor es <= que ALL, significa que es <= que el mínimo
 */
-
 
 --los empleados que tienen un salario superior que el 50% de las ventas de alguna oficina.
 select * from categorias;
@@ -491,14 +288,9 @@ WHERE oficina =  ANY (SELECT n_oficina
 /*Ejericios por puntos (0.5 c/u)
 -- Realizar Ejercicio anterior usando a) Producto Cartesiano y b) Left JOIN
 a) -- Ya ESTÁ EN LOS APUNTES
-SELECT empleados.* FROM empleados, oficinas 
-where oficina =n_oficina
-AND ventas > 10000;	
+
 
 b)
-SELECT empleados.* 
-FROM empleados left join oficinas on (empleados.oficina = oficinas.n_oficina) 
-where ventas > 10000;	
 
 */
 
@@ -516,19 +308,12 @@ Si un valor es <= que ALL, significa que es <= que el mínimo
 */
 
 -- Empleados que tienen un salario menor que las ventas de cualquiera de las oficinas
--- No sale nada porque no hay nadie que cumpla esta condición.  
-
-select * from categorias;
-select * from empleados;
-select * from oficinas;
-
 SELECT * FROM empleados natural join categorias
 WHERE sal < ALL (SELECT ventas FROM oficinas);
 
 -- No tiene sentido usarlo con la igualdad, porque no se puede ser igual a dos cosas que son distintas
 SELECT * FROM empleados natural join categorias
 WHERE sal = ALL (SELECT ventas FROM oficinas);
-
 
 -- Curiosidad: Cuando la subconsulta no devuelve ninguna fila (el WHERE de la subconsulta nadie lo verifica = satisface), pasa que muestra todo lo del primer select
 SELECT empleados.* FROM empleados natural join categorias
@@ -544,33 +329,19 @@ Repetir el ejercicio anterior utilizando ALL en lugar de MAX:
 
 1. Obtener el nombre del empleado con la comisión máxima.
 
-/* Solución Alumnos
-select * from empleados;
-select nombre from empleados
-where comision >=all (select comision from empleados);
-
--- Solución: Alicia
-*/
-
 
 2. Hallar el empleado que más gana, teniendo en cuenta que el sueldo se calcula como
 sal+comisión*ventas/100.
+
+*/
+
+
 */
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
 /* Subconsultas en el HAVING */
 /*----------------------------------------------------------------------------------*/
-
-/* 
-Similares a las subconsultas en el WHERE
-
-HAVING aplica un filtro según una condición lógica a los grupos, mientras que WHERE a
-las filas. 
-
-(i.e. WHERE no puede llevar expresiones con funciones de agregación y HAVING sí, y HAVING no puede llevar expresiones con campos que no estén en el GROUP BY y el WHERE sí).
-
-*/
 
 -- se pide hallar las oficinas cuyo sueldo máximo de empleado (que se calcula como sal+comisión*ventas/100) es mayor que lo que vende la oficina que menos vende.
 --SELECT *
@@ -582,43 +353,12 @@ HAVING
   MAX(sal+comision*ventas/100) > (SELECT MIN(ventas)
 				   FROM oficinas);
 
-/* TODAS DAN OFI_1
-
--- Las que tengan más empleados que alguna oficina (con empleados)
-SELECT oficina
-FROM empleados
-GROUP BY oficina
-HAVING COUNT(*) > ANY ( SELECT COUNT(*)
-			FROM empleados
-			GROUP BY oficina);
-
--- O también, todas menos las que tienen el mismo número de empleados que la oficina que tiene menos
-SELECT oficina FROM empleados
-EXCEPT
-SELECT oficina FROM empleados
-GROUP BY oficina
-HAVING COUNT(*) = (SELECT MIN(nro)
-		   FROM ( SELECT COUNT(*) AS nro
-		          FROM empleados
-		          GROUP BY oficina ) AS T
-		   );
 */
+
 /*----------------------------------------------------------------------------------*/
-
-
 /*----------------------------------------------------------------------------------*/
 /* La clausula WITH */
 /*----------------------------------------------------------------------------------*/
-
-/* 
-Relativamente nueva (1999)
-
-La clausula WITH es opcional, y cuando aparece, aparece antecediendo a la clausula SELECT.
-
-La clausula WITH contiene un nombre para una subconsulta, y a continuación la subconsulta.
-
-*/
-
 -- Pej. el máximo de la temperatura promedio se podría reformular así:
 WITH promedios AS (
 	SELECT fecha, AVG(temperatura) as promedio
@@ -628,6 +368,7 @@ WITH promedios AS (
 SELECT MAX(promedio) FROM promedios;
 
 -- WITH es útil si la misma subconsulta hay que utilizarla varias veces, pues con el WITH sólo es necesario definirla una vez.
+
 --P.Ej. los nombres de los empleados que ganan más que la media
 select nombre, sal+comision*ventas/100
 from empleados join oficinas on(oficina=n_oficina) natural join categorias
@@ -646,32 +387,13 @@ where totalSueldo > (select avg(totalSueldo)
 
 
 -- Vendedores que tienen una comisión por debajo de la comisión promedio de los vendedores y desviación de su comisión respecto a ese promedio
-
 -- SIN WITH
-select nombre, comision-(select avg(comision) from empleados where cargo = 'VENDEDOR')
-from empleados
-where comision < (select avg(comision) from empleados where cargo = 'VENDEDOR')
-and cargo = 'VENDEDOR';
 
 -- CON WITH
-with comisionPromedioVendedores as(
-	select avg(comision) valor from empleados where cargo = 'VENDEDOR')
-select nombre, comision - (select valor from comisionPromedioVendedores)
-from empleados
-where comision < (select valor from comisionPromedioVendedores)
-and cargo = 'VENDEDOR';
-
 
 -- listado con todos los empleados y 
 -- (1) la desviación de su comisión respecto al promedio de las comisiones que hay en su cargo,
 -- (2) la desviación de su comisión respecto al promedio de las comisiones que hay en las oficinas de su población.
-
-with joinOficinasEmpleados as ( select * from empleados join oficinas on (oficina=n_oficina)),
-	promediosComisionesPorCargo as ( select cargo, avg(comision) avgCargo from empleados group by cargo),
-	promediosComisionesPorPoblacion as ( select poblacion, avg(comision) avgPob from joinOficinasEmpleados group by poblacion)
-select nombre, cargo, comision - avgCargo, poblacion, comision - avgPob
-from joinOficinasEmpleados  natural left join promediosComisionesPorPoblacion
-natural left join promediosComisionesPorCargo;
 
 /*
 Ejercicio 14
@@ -689,12 +411,6 @@ Oficinas que tienen todos los cargos
 /*----------------------------------------------------------------------------------*/
 /* Referencias Externas y Subconsultas Correlacionadas */
 /*----------------------------------------------------------------------------------*/
-
-/* 
-Hasta ahora las subconsultas sencillas permitían que se Ejecutara la subconsulta y simplemente se Sustituía en la consulta principal el resultado de esa subconsulta.
-
-Nota: el material correspondiente está en 6.2. Subconsultas correlacionadas.sql
-*/
 
 /*----------------------------------------------------------------------------------*/
 /* Creamos BBDD para trabajar */ 
