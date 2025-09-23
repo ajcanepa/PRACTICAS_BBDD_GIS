@@ -3,7 +3,6 @@
 # Revisar los paquetes que carga y los mensajes de conflictos (poco más en Fuentes de datos)
 library(tidyverse)
 
-# IMPORTANTE PARA EL EXAMEN
 
 # Crear tablas -------------------------------------------------------
 # Limpiamos los objetos
