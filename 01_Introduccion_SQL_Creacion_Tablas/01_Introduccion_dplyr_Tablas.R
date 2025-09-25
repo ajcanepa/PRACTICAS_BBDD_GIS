@@ -3,6 +3,7 @@
 # Revisar los paquetes que carga y los mensajes de conflictos (poco más en Fuentes de datos)
 library(tidyverse)
 
+# AMO el lenguaje R
 
 # Crear tablas -------------------------------------------------------
 # Limpiamos los objetos
