@@ -2,7 +2,7 @@
 title: "Seminario Asignatura"
 subtitle: "Bases de Datos"
 author: "Antonio Canepa"
-date: "2025-08-07"
+date: "2025-09-30"
 output: 
   html_document:
     keep_md: true
@@ -347,7 +347,7 @@ print(tables)
 ```
 
 ```
-## [1] "consultas"    "pacientes"    "tratamientos"
+## [1] "alumnos"      "consultas"    "pacientes"    "tratamientos"
 ```
 
 ``` r
