@@ -2,7 +2,7 @@
 title: "Seminario Asignatura"
 subtitle: "Bases de Datos"
 author: "Antonio Canepa"
-date: "2025-09-30"
+date: "2025-10-02"
 output: 
   html_document:
     keep_md: true
