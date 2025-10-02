@@ -8,7 +8,7 @@ Más información en la [página del curso](https://ubuvirtual.ubu.es/course/vie
 ***
 
 ## Seminarios
-La idea detrás de los seminarios es crear manualmente una base de datos (*i.e.* un conjunto de tablas relacionadas) para así introducir al estudiante en el uso de fuentes biomédicas. Especial interés en la estructuración de las tablas, el manejo teórico de las *Bases de Datos* y cómo se transfiere esto al código. 
+La idea detrás de los seminarios es crear manualmente una base de datos (*i.e.* un conjunto de tablas relacionadas) para así introducir al estudiante en el uso de fuentes biomédicas. Especial interés en la estructuración de las tablas, el manejo teórico de las *Bases de Datos* y cómo se transfiere ésto al código. 
 
 Se trabajará básicamente con código el "*Structured Query Language* `SQL`" y con el paquete `dplyr` del lenguaje de programación **R**.
 
