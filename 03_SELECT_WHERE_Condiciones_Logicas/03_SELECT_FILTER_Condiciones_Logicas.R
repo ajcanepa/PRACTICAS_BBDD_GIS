@@ -1,5 +1,8 @@
 # UTILIZACIÓN DE SELECT ---------------------------------------------------
 # Select se utiliza de una manera similar (aunque no igual) en SQL y en R
+# Si no se han instalado aún --> install.packages('tidyverse')
+library(tidyverse)
+
 rm(alumnos)
 
 alumnos <- tibble(nombre = character(),
