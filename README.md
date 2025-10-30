@@ -24,7 +24,7 @@ La entrega se basa en dos archivos y un repostorio que se solicitarán como meca
 
 Podéis encontrar una explicación del seminario en este documento:
 
-*  [Seminario Asignatura Bases de Datos](https://github.com/ajcanepa/PRACTICAS_BBDD_GIS/blob/main/12_Mini_Proyecto_Final/Seminario_Ejemplo.md)
+*  [Seminario Asignatura Bases de Datos](https://github.com/ajcanepa/PRACTICAS_BBDD_GIS/blob/main/11_Mini_Proyecto_Final/Seminario_Ejemplo.md)
 
 
 La estructura del seminario contará con los identificadores básicos del seminario como es el `título`, los `autores` y `curso` al que corresponde y con los siguientes apartados específicos:
