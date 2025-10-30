@@ -84,6 +84,7 @@ Para una correcta visualización de los archivos `.html`, deberás descargarlos 
 * [DuckDB - RClient](https://duckdb.org/docs/stable/clients/r.html)
 * [orbital package - run predictions of tidymodels inside databases.](https://orbital.tidymodels.org/)
 * [Run predictions directly within a SQL database - Blog](https://posit.co/blog/running-tidymodel-prediction-workflows-inside-databases/)
+* [Animaciones Operaciones en Bases de Datos](https://github.com/gadenbuie/tidyexplain)
 
 #### Herramientas para _Entity-Relationship Diagrams_ (**ERDs**)
 * [dm - Rpackage](https://github.com/cynkra/dm/)
