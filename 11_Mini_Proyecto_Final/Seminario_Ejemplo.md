@@ -2,7 +2,7 @@
 title: "Seminario Asignatura"
 subtitle: "Bases de Datos"
 author: "Antonio Canepa"
-date: "2025-10-02"
+date: "2025-11-05"
 output: 
   html_document:
     keep_md: true
@@ -11,7 +11,7 @@ output:
 
 # Crear una conexión a una BBDD local usando R
 
-Para poder ejecutar los comandos de `sql` en un documento RMarkdown, deberemos utilizar los paquetes `DBI` y `RPostgres`. 
+Para poder ejecutar los comandos de `sql` en un documento RMarkdown, deberemos utilizar los paquetes `DBI` y `RPostgres`.
 
 A continuación se detalla los pasos necesarios para generar una conexión local.
 
@@ -31,26 +31,30 @@ con <- dbConnect(RPostgres::Postgres(),
 ```
 
 # Idea de Seminario
+
 En este semianrio tendréis que ser capáz de generar tablas con datos relativos a la salud humana y/o biomedicina. Para esto tendréis que buscar en diferentes repositorios de datos disponibles.
 
 A continuación te dejo un **pequeño** listado con recursos, pero se valorará la obtención de datos de diversos orígenes.
 
-  - [Datos abiertos Gob. España](https://datos.gob.es/es/catalogo) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
-  - [Datos abiertos CyL](https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
-  - [Datos espaciales de hospitales](https://opendata.esri.es/datasets/ComunidadSIG::hospitales-de-espa%C3%B1a/about)
-  - [INE (Instituto Nacional de Estadística) package](https://inebaser.wordpress.com/)
-  - [rOpenSpain community](https://ropenspain.es/) / [GitHub-Repo](https://github.com/rOpenSpain)
-  - [European Health Information Initiative (EHII)](https://www.euro.who.int/en/data-and-evidence/european-health-information-initiative-ehii)
-  - [World Health Organization (WHO)](https://www.who.int/data)
-  - [rOpenHealth](https://github.com/rOpenHealth)
+-   [Datos abiertos Gob. España](https://datos.gob.es/es/catalogo) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
+-   [Datos abiertos CyL](https://datosabiertos.jcyl.es/web/es/datos-abiertos-castilla-leon.html) / [`opendataes`](https://github.com/rOpenSpain/opendataes)
+-   [Datos espaciales de hospitales](https://opendata.esri.es/datasets/ComunidadSIG::hospitales-de-espa%C3%B1a/about)
+-   [INE (Instituto Nacional de Estadística) package](https://inebaser.wordpress.com/)
+-   [rOpenSpain community](https://ropenspain.es/) / [GitHub-Repo](https://github.com/rOpenSpain)
+-   [European Health Information Initiative (EHII)](https://www.euro.who.int/en/data-and-evidence/european-health-information-initiative-ehii)
+-   [World Health Organization (WHO)](https://www.who.int/data)
+-   [rOpenHealth](https://github.com/rOpenHealth)
 
 ## Datos del seminario
-Los datos deberán ser ingresados "*manualmente*"; es decir, que tendréis que crear las tablas vosotros mismos y así poder aplicar todas (o la gran mayoría) de conceptos y restricciones que veamos en prácticas.  
+
+Los datos deberán ser ingresados "*manualmente*"; es decir, que tendréis que crear las tablas vosotros mismos y así poder aplicar todas (o la gran mayoría) de conceptos y restricciones que veamos en prácticas.
 
 ## Tablas del seminario
+
 El número de tablas creadas no está definido pero han de ser más de dos. De esta manera podréis construir preguntas/ejemplos en los que poner en práctica la unión de tablas y el calculo de variables y operaciones (sumarias, de conjunto, etc).
 
 ## Texto del seminario
+
 El texto deberá seguir el orden de un informe/artículo científico; en el que se vean claramente:
 
 -   **Introducción**: se hablará del tema a tratar y de dónde provienen los datos.
@@ -59,33 +63,36 @@ El texto deberá seguir el orden de un informe/artículo científico; en el que 
 
 # Ejemplo de seminario
 
-A continuación os dejo un ejercicio muy básico para que veáis cómo estructurar el trabajo del seminario. Reitero que es muy básico y un seminario similar a este ejemplo, __no estaría a la altura de ser aprobado__.
+A continuación os dejo un ejercicio muy básico para que veáis cómo estructurar el trabajo del seminario. Reitero que es muy básico y un seminario similar a este ejemplo, **no estaría a la altura de ser aprobado**.
 
 ## Introducción
 
-Estos datos se corresponden a un ejemplo sintético (*i.e.* ficticio) de __epidemiología__.
+Estos datos se corresponden a un ejemplo sintético (*i.e.* ficticio) de **epidemiología**.
 
-En total se crearán tres __tablas__. 
+En total se crearán tres **tablas**.
 
-1. __Tabla pacientes__: Contendrá los datos de los pacientes.
-2. __Tabla consultas__: Contendrá los registros de consultas médicas.
-3. __Tabla tratamientos__: Contendrá los tratamientos que se administran a los pacientes.
+1.  **Tabla pacientes**: Contendrá los datos de los pacientes.
+2.  **Tabla consultas**: Contendrá los registros de consultas médicas.
+3.  **Tabla tratamientos**: Contendrá los tratamientos que se administran a los pacientes.
 
 ## Objetivos/Preguntas
+
 A continuación se responderán las siguientes preguntas:
 
-1. ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
-2. Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
-3. ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
+1.  ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
+2.  Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
+3.  ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
 
 ## Metodología y Resultados
+
 Código del seminario
 
 ### Creación de tablas
 
-#### __Tabla pacientes__
+#### **Tabla pacientes**
+
 Contendrá los datos de los pacientes.
- 
+
 
 ``` r
 # Crear tabla 'pacientes'
@@ -107,6 +114,7 @@ CREATE TABLE pacientes (
 
 Ahora agregamos los datos de los pacientes
 
+
 ``` r
 # Insertar datos en 'pacientes'
 dbExecute(con, "
@@ -123,6 +131,7 @@ VALUES
 ```
 
 Mostramos la tabla
+
 
 ``` sql
 SELECT * FROM pacientes; 
@@ -142,8 +151,8 @@ Table: 3 records
 
 </div>
 
+#### **Tabla consultas**
 
-#### __Tabla consultas__ 
 Contendrá los registros de consultas médicas.
 
 
@@ -166,6 +175,7 @@ CREATE TABLE consultas (
 
 Ahora agregamos valores a las tablas de consultas
 
+
 ``` r
 # Insertar datos en 'consultas'
 dbExecute(con, "
@@ -182,6 +192,7 @@ VALUES
 ```
 
 Mostramos la tabla
+
 
 ``` sql
 SELECT * FROM consultas; 
@@ -201,7 +212,8 @@ Table: 3 records
 
 </div>
 
-#### __Tabla tratamientos__ 
+#### **Tabla tratamientos**
+
 Contendrá los tratamientos que se administran a los pacientes.
 
 
@@ -224,6 +236,7 @@ CREATE TABLE tratamientos (
 
 Ahora agregamos valores a la tabla de tratamientos
 
+
 ``` r
 # Insertar datos en 'tratamientos'
 dbExecute(con, "
@@ -240,6 +253,7 @@ VALUES
 ```
 
 Mostramos la tabla
+
 
 ``` sql
 SELECT * FROM tratamientos; 
@@ -260,7 +274,8 @@ Table: 3 records
 </div>
 
 ### Pregunta 1
-1. ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
+
+1.  ¿Cuáles son los nombres de los pacientes y los tratamientos que están recibiendo?
 
 
 ``` sql
@@ -285,7 +300,9 @@ Table: 3 records
 </div>
 
 ### Pregunta 2
-2. Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
+
+2.  Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
+
 
 ``` sql
 SELECT consultas.diagnostico, COUNT(consultas.id_consulta) AS total_consultas
@@ -307,10 +324,9 @@ Table: 3 records
 
 </div>
 
-
-
 ### Pregunta 3
-3. ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
+
+3.  ¿Cuál es la dosis promedio de tratamiento que están recibiendo los pacientes en cada diagnóstico?
 
 
 ``` sql
@@ -335,9 +351,10 @@ Table: 3 records
 </div>
 
 
+
 # Finalizando el documento
 
-Para finalizar el documento (y no entorpecer con las prácticas), es necesario crear un código que nos permita __borrar todas las tablas creadas__. 
+Para finalizar el documento (y no entorpecer con las prácticas), es necesario crear un código que nos permita **borrar todas las tablas creadas**.
 
 
 ``` r
@@ -347,7 +364,7 @@ print(tables)
 ```
 
 ```
-## [1] "alumnos"      "consultas"    "pacientes"    "tratamientos"
+## [1] "consultas"    "pacientes"    "tratamientos"
 ```
 
 ``` r
@@ -366,6 +383,7 @@ print(tables_after)
 ```
 
 Finalmente, desconectamos la base de datos local.
+
 
 ``` r
 # Cerrar la conexión

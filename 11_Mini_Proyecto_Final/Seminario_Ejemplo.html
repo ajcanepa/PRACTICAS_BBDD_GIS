@@ -11,7 +11,7 @@
 
 <meta name="author" content="Antonio Canepa" />
 
-<meta name="date" content="2025-10-02" />
+<meta name="date" content="2025-11-05" />
 
 <title>Seminario Asignatura</title>
 
@@ -353,7 +353,7 @@ display: none;
 <h1 class="title toc-ignore">Seminario Asignatura</h1>
 <h3 class="subtitle">Bases de Datos</h3>
 <h4 class="author">Antonio Canepa</h4>
-<h4 class="date">2025-10-02</h4>
+<h4 class="date">2025-11-05</h4>
 
 </div>
 
@@ -786,7 +786,7 @@ tablas creadas</strong>.</p>
 <pre class="r"><code># Obtener la lista de todas las tablas en la base de datos
 tables &lt;- dbListTables(con)
 print(tables)</code></pre>
-<pre><code>## [1] &quot;alumnos&quot;      &quot;consultas&quot;    &quot;pacientes&quot;    &quot;tratamientos&quot;</code></pre>
+<pre><code>## [1] &quot;consultas&quot;    &quot;pacientes&quot;    &quot;tratamientos&quot;</code></pre>
 <pre class="r"><code># Borrar todas las tablas
 for (table in tables) {
   dbExecute(con, paste0(&quot;DROP TABLE IF EXISTS &quot;, table, &quot; CASCADE;&quot;))
