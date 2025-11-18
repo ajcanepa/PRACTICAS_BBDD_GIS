@@ -17,7 +17,7 @@ Las temáticas pueden estar relacionadas (no es obligatorio) al efecto de estres
 A modo de ejemplo, os dejo unos enlaces a algunos seminarios previos que han sido bien (o muy bien) evaluados en la siguiente sección [Hall of Fame - Seminarios](#hall-of-fame---seminarios)
 
 ### Estructura del Seminario
-La entrega se basa en dos archivos y un repostorio que se solicitarán como mecanismo de evaluación del tercer control parcial (evaluación contínua). Los archivos que tendréis que entregar son: 
+La entrega se basa en dos archivos que se solicitarán como mecanismo de evaluación del tercer control parcial (evaluación contínua). Los archivos que tendréis que entregar son: 
 
 * __*i)*__ Archivo RMarkdown (Cuaderno de R) que contendrá tanto el texto como el código empleado en el seminario. Es de extensión `.Rmd`, y 
 * __*ii*__) Archivo *HyperText Markup Language (__HTML__)*, de extensión `.html` que contendrá el seminario *renderizado*, es decir se unirá tanto el texto como el código y sus resultados (*i.e.* tablas.).
