@@ -45,6 +45,8 @@ select distinct salario from empleados
 where salario > 1000;
 
 -- atributo comparador atributo: salario > ventas
+select distinct * from empleados 
+where salario > ventas;
 
 -- predicado logico de negación: salario no es = 1000
 select distinct * from empleados 

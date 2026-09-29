@@ -1,0 +1,3062 @@
+---
+title: "Álgebra Relacional con SQL y R"
+subtitle: "Tema 3 · Teoría de Bases de Datos (GIS) · Operaciones de conjunto y AR"
+author: "Antonio Canepa Oneto"
+date: |
+ | <br>
+ | "`r paste0("5º Semestre / Curso ", format(Sys.Date(), "%Y"), "-", as.integer(format(Sys.Date(), "%Y")) + 1)`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    df_print: kable
+    highlight: tango
+---
+
+```{css, echo = FALSE}
+/* Documento más ancho para que quepan dos cajas en paralelo */
+.main-container { max-width: 1700px !important; }
+
+/* Contenedor de las dos cajas: se colocan lado a lado y se apilan en pantallas estrechas */
+.paralelo {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+  align-items: flex-start; margin: 0.8rem 0 1.8rem;
+}
+.paralelo > div {
+  flex: 1 1 360px; min-width: 0; overflow-x: auto;
+  border-radius: 8px; padding: 0.5rem 0.9rem 0.7rem;
+}
+.caja-sql { border: 2px solid #336791; background: #f4f8fc; }
+.caja-r   { border: 2px solid #1f8a4c; background: #f4fbf6; }
+.caja-sql::before, .caja-r::before {
+  display: inline-block; font-weight: 700; font-size: 0.8em;
+  padding: 0.1rem 0.6rem; border-radius: 4px; color: white; margin-bottom: 0.4rem;
+}
+.caja-sql::before { content: "SQL · PostgreSQL"; background: #336791; }
+.caja-r::before   { content: "R · tidyverse (dplyr)"; background: #1f8a4c; }
+.paralelo table { font-size: 0.85em; }
+.paralelo table caption { font-size: 0.8em; }
+.nota { border-left: 4px solid #e0a800; background: #fffbea; padding: 0.5rem 0.9rem; margin: 0.8rem 0; }
+```
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, comment = "#>")
+knitr::opts_knit$set(sql.max.print = 50)   # nº máximo de filas que imprimen los chunks SQL
+options(knitr.kable.NA = "NA", scipen = 999)   # sin notación científica
+```
+
+# Introducción y configuración
+
+En esta práctica trabajamos las operaciones del **Álgebra Relacional (AR)**: operaciones unarias (selección, proyección, renombrado), operaciones de conjuntos (unión, intersección, diferencia), producto cartesiano y los distintos tipos de *join*. Cada ejemplo aparece en **dos cajas en paralelo**: a la izquierda la consulta en **SQL** (PostgreSQL) y a la derecha su equivalente en **R** con `dplyr`, de manera que se pueda ir comparando cómo se expresa la misma operación del AR en cada lenguaje.
+
+La mecánica es siempre la misma: las tablas se **crean y se cargan en PostgreSQL mediante chunks SQL**, y después R las **lee desde la misma conexión** para trabajar con ellas en memoria.
+
+## Paquetes y conexión a PostgreSQL
+
+Creamos una conexión llamada `con` al servidor local (puerto 5432, usuario y contraseña `postgres`). Esa misma conexión la usan todos los chunks SQL mediante la opción `connection = con`.
+
+```{r conexion}
+library(DBI)
+library(RPostgres)
+library(tidyverse)
+
+con <- dbConnect(
+  RPostgres::Postgres(),
+  host     = "localhost",
+  port     = 5432,
+  dbname   = "postgres",   # cambia el nombre si usas otra base de datos
+  user     = "postgres",
+  password = "postgres"
+)
+```
+
+<div class="nota">
+**Importante.** El documento borra y vuelve a crear las tablas de la práctica (`empleados`, `ciudades`, `oficina`, `empleado`, `profesores`...) en la base de datos indicada. Si en tu base `postgres` tienes tablas con esos nombres que quieras conservar, usa otra base de datos en `dbname`.
+
+Además, cada chunk SQL de knitr ejecuta **una única sentencia**, por eso la creación de cada tabla se reparte en varios chunks (`CREATE`, `INSERT`...).
+</div>
+
+## Función auxiliar para leer tablas en R
+
+PostgreSQL **pasa a minúsculas** los identificadores que no van entre comillas (`Nombre` se guarda como `nombre`, `Ape1` como `ape1`) y el tipo `char(n)` **rellena con espacios** hasta la longitud declarada (`'Pepe'` en un `char(20)` se devuelve como `'Pepe                '`). Para que en R podamos comparar textos sin sorpresas, leemos las tablas con una pequeña función que elimina esos espacios sobrantes.
+
+```{r funcion-leer}
+leer <- function(tabla) {
+  dbReadTable(con, tabla) %>%
+    as_tibble() %>%
+    mutate(across(where(is.character), str_trim))
+}
+```
+
+Partimos de una base de datos limpia, borrando las tablas y vistas de la práctica por si existen de una ejecución anterior:
+
+```{sql, connection = con}
+DROP TABLE IF EXISTS empleados, ciudades, alumnos, profesores, oficina, categoria,
+  empleado, a, b, departamentos, proyectos, asignaturas, imparte,
+  chicos, chicas, conoce CASCADE;
+```
+
+# Operaciones unarias
+
+Las operaciones unarias actúan sobre **una sola relación**: la *selección* (σ) elige filas y la *proyección* (π) elige columnas.
+
+## Tabla de trabajo: `empleados`
+
+Creamos la tabla en PostgreSQL y la leemos en R.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS empleados CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE empleados (
+  dni       numeric(8) PRIMARY KEY,
+  nombre    varchar(15),
+  salario   numeric(8,2),
+  ventas    numeric(10,2),
+  ciudad    varchar(15),
+  categoria varchar(15)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleados VALUES
+  (1, 'Pepe',  1000, 2000, 'Burgos', 'Vendedor'),
+  (2, 'Juan',  1500, 2000, 'Burgos', 'Jefe'),
+  (3, 'Ana',    750, 2000, 'Soria',  'Jefe'),
+  (4, 'Maria', 1500, 2000, 'Madrid', 'Vendedor'),
+  (5, 'Luis',  1000,    0, 'Burgos', 'Vendedor');
+```
+
+```{sql, connection = con}
+SELECT * FROM empleados;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados <- leer("empleados")
+empleados
+```
+:::
+::::
+
+## Selección (σ) — `WHERE` / `filter()`
+
+La selección devuelve el **subconjunto de filas** que cumple un predicado. En SQL el predicado va en la cláusula `WHERE`; en R, dentro de `filter()`. Recuerda que el AR trabaja con *conjuntos* (sin filas repetidas), mientras que SQL y R conservan los duplicados salvo que usemos `DISTINCT` / `distinct()`.
+
+**Atributo comparador constante:** salarios mayores que 1000.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT salario FROM empleados
+WHERE salario > 1000;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(salario > 1000) %>%
+  select(salario)
+```
+:::
+::::
+
+**Eliminando duplicados** para obtener un conjunto, como exige el AR.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT salario FROM empleados
+WHERE salario > 1000;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(salario > 1000) %>%
+  select(salario) %>%
+  distinct()
+```
+:::
+::::
+
+Si se proyecta más de un atributo, `DISTINCT` / `distinct()` actúa sobre la **combinación** de todos ellos. Como `dni` es clave primaria, aquí no se elimina ninguna fila.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT dni, salario FROM empleados
+WHERE salario > 1000;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(salario > 1000) %>%
+  select(dni, salario) %>%
+  distinct()
+```
+:::
+::::
+
+**Atributo comparador atributo:** categorías de los empleados cuyo salario es menor que sus ventas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT categoria FROM empleados
+WHERE salario < ventas;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(salario < ventas) %>%
+  select(categoria) %>%
+  distinct()
+```
+:::
+::::
+
+**Predicado de negación:** el salario no es 1000. En ambos lenguajes el operador es `!=` (en SQL también vale `<>`).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT * FROM empleados
+WHERE salario != 1000;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(salario != 1000) %>%
+  distinct()
+```
+:::
+::::
+
+**Predicados compuestos con conectores lógicos:** `AND` en SQL equivale a `&` en R (o a separar condiciones con comas dentro de `filter()`). Prueba a cambiar `>=` por `>` y observa cómo cambia el resultado.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT * FROM empleados
+WHERE salario >= 1000
+  AND salario > ventas;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(salario >= 1000 & salario > ventas) %>%
+  distinct()
+```
+:::
+::::
+
+## Proyección (π) — `SELECT` / `select()`
+
+La proyección devuelve un **subconjunto de atributos** (columnas). En SQL la lista de atributos va tras `SELECT`; en R se usa `select()`. De nuevo, para obtener un conjunto sin duplicados hay que añadir `DISTINCT` / `distinct()`.
+
+**Con duplicados:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT categoria, salario FROM empleados;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  select(categoria, salario)
+```
+:::
+::::
+
+**Sin duplicados:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT categoria, salario FROM empleados;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  select(categoria, salario) %>%
+  distinct()
+```
+:::
+::::
+
+**Proyección que incluye el atributo del filtro.** Aquí `ciudad` aparece tanto en la proyección como en la selección.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT categoria, salario, ciudad FROM empleados
+WHERE ciudad = 'Burgos';
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(ciudad == "Burgos") %>%
+  select(categoria, salario, ciudad) %>%
+  distinct()
+```
+:::
+::::
+
+**Proyección que no incluye el atributo del filtro.** En SQL el orden lógico de evaluación es siempre `FROM → WHERE → SELECT`, así que no importa que `ciudad` no esté en la lista del `SELECT`. En R, en cambio, las operaciones se ejecutan **en el orden en que se escriben**: si proyectamos antes de filtrar, la columna ya no existe y se produce un error. Por eso en R lo habitual es `filter()` antes que `select()`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT categoria, salario FROM empleados
+WHERE ciudad = 'Burgos';
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+# Falla: tras select() la columna ciudad ya no existe
+empleados %>%
+  select(categoria, salario) %>%
+  filter(ciudad == "Burgos")
+```
+
+```{r}
+# Solución: primero seleccionar filas y después proyectar
+empleados %>%
+  filter(ciudad == "Burgos") %>%
+  select(categoria, salario) %>%
+  distinct()
+```
+:::
+::::
+
+**Permutar el orden de los atributos.** En el modelo relacional el orden de las columnas no tiene significado, pero tanto SQL como R permiten reordenarlas en la proyección.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ciudad, dni, nombre, categoria, salario, ventas
+FROM empleados;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  select(ciudad, dni, nombre, categoria, salario, ventas)
+```
+:::
+::::
+
+# Operaciones de conjuntos
+
+Las operaciones de conjuntos del AR son la **unión** (∪), la **intersección** (∩) y la **diferencia** (−). Sus equivalentes son:
+
+| AR | SQL | R (`dplyr`) |
+|:--:|:---:|:-----------:|
+| ∪  | `UNION`     | `union()`     |
+| ∩  | `INTERSECT` | `intersect()` |
+| −  | `EXCEPT`    | `setdiff()`   |
+
+Por defecto **eliminan las filas repetidas** (se comportan como conjuntos) y exigen que las dos relaciones sean **compatibles para la unión**: mismo número de atributos y dominios compatibles. R es más estricto que SQL: además exige que las columnas **se llamen igual**.
+
+## Tablas de trabajo: `ciudades` y `empleados`
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS ciudades, empleados CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE ciudades (
+  ciudad     varchar(15) PRIMARY KEY,
+  habitantes numeric(8)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO ciudades VALUES
+  ('Burgos', 200000), ('Soria', 25000), ('Madrid', 4000000);
+```
+
+```{sql, connection = con}
+CREATE TABLE empleados (
+  dni       numeric(8) PRIMARY KEY,
+  nombre    varchar(15),
+  salario   numeric(8,2),
+  ventas    numeric(10,2),
+  ciudad    varchar(15),
+  categoria varchar(15)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleados VALUES
+  (1, 'Pepe',  1000, 2000, 'Burgos', 'Vendedor'),
+  (2, 'Juan',  1500, 2000, 'Burgos', 'Jefe'),
+  (3, 'Ana',    750, 2000, 'Soria',  'Jefe'),
+  (4, 'Maria', 1500, 2000, 'Madrid', 'Vendedor'),
+  (5, 'Luis',  1000,    0, 'Burgos', 'Vendedor');
+```
+
+```{sql, connection = con}
+SELECT * FROM ciudades;
+```
+:::
+::: {.caja-r}
+```{r}
+ciudades  <- leer("ciudades")
+empleados <- leer("empleados")
+
+ciudades
+empleados
+```
+:::
+::::
+
+## Unión — `UNION` / `union()`
+
+Devuelve las tuplas que están en A, en B o en ambas. **Ejemplo:** ciudades que tienen vendedores o que tienen menos de 100.000 habitantes.
+
+Primero, un **error por incompatibilidad de unión**: la primera consulta devuelve una columna y la segunda dos.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con, error = TRUE}
+SELECT ciudad FROM empleados WHERE categoria = 'Vendedor'
+UNION
+SELECT ciudad, habitantes FROM ciudades WHERE habitantes < 100000;
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+empleados %>%
+  filter(categoria == "Vendedor") %>%
+  select(ciudad) %>%
+  union(ciudades %>%
+          filter(habitantes < 100000) %>%
+          select(ciudad, habitantes))
+```
+:::
+::::
+
+Ahora con relaciones compatibles. Fíjate en que `Burgos` aparece una sola vez: la unión elimina duplicados, por lo que no hace falta `DISTINCT`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ciudad FROM empleados WHERE categoria = 'Vendedor'
+UNION
+SELECT ciudad FROM ciudades WHERE habitantes < 100000;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(categoria == "Vendedor") %>%
+  select(ciudad) %>%
+  union(ciudades %>%
+          filter(habitantes < 100000) %>%
+          select(ciudad))
+```
+:::
+::::
+
+Si no queremos eliminar repetidos usamos `UNION ALL` / `union_all()`. Es más rápido, porque el sistema no tiene que buscar duplicados (si la proyección incluye la clave primaria, el resultado es el mismo).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ciudad FROM empleados WHERE categoria = 'Vendedor'
+UNION ALL
+SELECT ciudad FROM ciudades WHERE habitantes < 100000;
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(categoria == "Vendedor") %>%
+  select(ciudad) %>%
+  union_all(ciudades %>%
+              filter(habitantes < 100000) %>%
+              select(ciudad))
+```
+:::
+::::
+
+## Intersección — `INTERSECT` / `intersect()`
+
+Devuelve las tuplas que están **simultáneamente** en A y en B. **Ejemplo:** ciudades que tienen tanto jefes como vendedores.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ciudad FROM empleados WHERE categoria = 'Jefe'
+INTERSECT
+SELECT ciudad FROM empleados WHERE categoria = 'Vendedor';
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(categoria == "Jefe") %>%
+  select(ciudad) %>%
+  intersect(empleados %>%
+              filter(categoria == "Vendedor") %>%
+              select(ciudad))
+```
+:::
+::::
+
+## Diferencia — `EXCEPT` / `setdiff()`
+
+Devuelve las tuplas que están en A pero **no** en B. No es conmutativa: A − B ≠ B − A. **Ejemplo:** ciudades (con empleados) que no tienen ningún jefe.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ciudad FROM empleados
+EXCEPT
+SELECT ciudad FROM empleados WHERE categoria = 'Jefe';
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  select(ciudad) %>%
+  setdiff(empleados %>%
+            filter(categoria == "Jefe") %>%
+            select(ciudad))
+```
+:::
+::::
+
+## El modificador `ALL` en las operaciones de conjunto
+
+Con `ALL` las operaciones de conjunto trabajan con **multiconjuntos** (conservan repetidos). SQL ofrece `UNION ALL`, `INTERSECT ALL` y `EXCEPT ALL`; `dplyr` solo trae `union_all()`, pero los demás se pueden emular.
+
+### Tablas de trabajo: `alumnos` y `profesores`
+
+Observa que los tipos no son idénticos (`integer` frente a `numeric(3)`, `char(20)` frente a `varchar(30)`) pero sí **compatibles**, que es lo que exige la compatibilidad de unión.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS alumnos, profesores CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE alumnos (
+  dni       integer PRIMARY KEY,
+  Nombre    char(20),
+  Ape1      char(20),
+  Ape2      char(20),
+  matricula numeric(8) NOT NULL UNIQUE
+);
+```
+
+```{sql, connection = con}
+INSERT INTO alumnos VALUES
+  (1, 'Pepe', 'Alvarez', 'Alvarez', 1),
+  (2, 'Juan', 'Alvarez', 'Alvarez', 2),
+  (3, 'Pepe', 'Alvarez', 'Garcia',  3);
+```
+
+```{sql, connection = con}
+CREATE TABLE profesores (
+  dni    numeric(3) PRIMARY KEY,  -- compatible con integer
+  nombre varchar(30),             -- compatible con char(20)
+  Ape1   char(20),
+  Ape2   char(20),
+  nro    numeric(8) NOT NULL UNIQUE
+);
+```
+
+```{sql, connection = con}
+INSERT INTO profesores VALUES
+  (1, 'Pepe', 'Alvarez', 'Alvarez', 4),
+  (3, 'Juan', 'Alvarez', 'Lopez',   5),
+  (2, 'Pepe', 'Alvarez', 'Garcia',  6),
+  (4, 'Juan', 'Alvarez', 'Lopez',   7);
+```
+:::
+::: {.caja-r}
+```{r}
+# Los nombres de columna llegan en minúsculas: nombre, ape1, ape2
+alumnos    <- leer("alumnos")
+profesores <- leer("profesores")
+
+alumnos
+profesores
+```
+:::
+::::
+
+### `UNION` frente a `UNION ALL`
+
+Unión de profesores y alumnos **sin repetidos** (la fila de Pepe Alvarez Alvarez con dni 1 está en ambas tablas):
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT dni, nombre, ape1, ape2 FROM profesores
+UNION
+SELECT dni, nombre, ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  select(dni, nombre, ape1, ape2) %>%
+  union(alumnos %>% select(dni, nombre, ape1, ape2))
+```
+:::
+::::
+
+**Con repetidos:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT dni, nombre, ape1, ape2 FROM profesores
+UNION ALL
+SELECT dni, nombre, ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  select(dni, nombre, ape1, ape2) %>%
+  union_all(alumnos %>% select(dni, nombre, ape1, ape2))
+```
+:::
+::::
+
+Al proyectar solo los apellidos la diferencia es mucho más visible. **Sin repetidos:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ape1, ape2 FROM profesores
+UNION
+SELECT ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  select(ape1, ape2) %>%
+  union(alumnos %>% select(ape1, ape2))
+```
+:::
+::::
+
+**Con repetidos:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT ape1, ape2 FROM profesores
+UNION ALL
+SELECT ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  select(ape1, ape2) %>%
+  union_all(alumnos %>% select(ape1, ape2))
+```
+:::
+::::
+
+### `EXCEPT` frente a `EXCEPT ALL`
+
+Nombre y apellidos de profesores que **no son alumnos**, **sin repetidos**:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, ape1, ape2 FROM profesores
+EXCEPT
+SELECT nombre, ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  select(nombre, ape1, ape2) %>%
+  setdiff(alumnos %>% select(nombre, ape1, ape2))
+```
+:::
+::::
+
+**Con repetidos.** `EXCEPT ALL` resta ocurrencia a ocurrencia: como hay dos profesores "Juan Alvarez Lopez" y ningún alumno con ese nombre, salen los dos. En `dplyr` no existe `setdiff_all()`, pero se emula numerando cada ocurrencia de una misma fila y haciendo un `anti_join()` (tuplas de A sin pareja en B).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, ape1, ape2 FROM profesores
+EXCEPT ALL
+SELECT nombre, ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+# Numera la 1ª, 2ª... aparición de cada fila repetida
+numerar <- function(df) {
+  df %>%
+    group_by(across(everything())) %>%
+    mutate(.ocurrencia = row_number()) %>%
+    ungroup()
+}
+
+numerar(profesores %>% select(nombre, ape1, ape2)) %>%
+  anti_join(numerar(alumnos %>% select(nombre, ape1, ape2)),
+            by = c("nombre", "ape1", "ape2", ".ocurrencia")) %>%
+  select(-.ocurrencia)
+```
+:::
+::::
+
+Nombre y apellidos de **alumnos que no son profesores**. Aquí no hay repetidos entre los alumnos, así que `EXCEPT` y `EXCEPT ALL` dan lo mismo (pruébalo).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, ape1, ape2 FROM alumnos
+EXCEPT
+SELECT nombre, ape1, ape2 FROM profesores;
+```
+:::
+::: {.caja-r}
+```{r}
+alumnos %>%
+  select(nombre, ape1, ape2) %>%
+  setdiff(profesores %>% select(nombre, ape1, ape2))
+```
+:::
+::::
+
+## Ordenación en las operaciones de conjunto — `ORDER BY` / `arrange()`
+
+En SQL el `ORDER BY` se aplica al **resultado final** de la operación de conjunto, por lo que solo puede aparecer una vez y al final. En R `arrange()` puede escribirse en cualquier punto de la cadena sin dar error, pero solo tiene sentido al final: si se ordena antes de la unión, únicamente queda ordenada la primera parte.
+
+**`ORDER BY` mal colocado:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con, error = TRUE}
+SELECT dni, nombre, ape1, ape2 FROM profesores
+WHERE ape2 = 'Alvarez'
+ORDER BY dni
+UNION
+SELECT dni, nombre, ape1, ape2 FROM alumnos;
+```
+:::
+::: {.caja-r}
+```{r}
+# No da error, pero el resultado final NO queda ordenado por dni
+profesores %>%
+  filter(ape2 == "Alvarez") %>%
+  select(dni, nombre, ape1, ape2) %>%
+  arrange(dni) %>%
+  union(alumnos %>% select(dni, nombre, ape1, ape2))
+```
+:::
+::::
+
+**Forma correcta en ambos lenguajes:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT dni, nombre, ape1, ape2 FROM profesores
+WHERE ape2 = 'Alvarez'
+UNION
+SELECT dni, nombre, ape1, ape2 FROM alumnos
+ORDER BY dni;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  filter(ape2 == "Alvarez") %>%
+  select(dni, nombre, ape1, ape2) %>%
+  union(alumnos %>% select(dni, nombre, ape1, ape2)) %>%
+  arrange(dni)
+```
+:::
+::::
+
+**Orden descendente:** `DESC` en SQL, `desc()` en R.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT dni, nombre, ape1, ape2 FROM profesores
+WHERE ape2 = 'Alvarez'
+UNION
+SELECT dni, nombre, ape1, ape2 FROM alumnos
+ORDER BY dni DESC;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  filter(ape2 == "Alvarez") %>%
+  select(dni, nombre, ape1, ape2) %>%
+  union(alumnos %>% select(dni, nombre, ape1, ape2)) %>%
+  arrange(desc(dni))
+```
+:::
+::::
+
+# Renombrado de atributos (ρ)
+
+El renombrado cambia el nombre de los atributos de una relación. En SQL se hace en la lista del `SELECT` con `AS` (opcional); en R, dentro de `select()` con la sintaxis `nombre_nuevo = nombre_antiguo`, o con `rename()` si queremos conservar el resto de columnas.
+
+## Renombrado sencillo
+
+Seguimos usando las tablas `ciudades` y `empleados` creadas en la sección anterior (son idénticas a las del script original). **Sin `AS`**: en SQL, un identificador justo detrás de una columna, sin coma, se interpreta como su nuevo nombre.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT categoria rango, salario euros
+FROM empleados
+WHERE ciudad = 'Burgos';
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(ciudad == "Burgos") %>%
+  select(rango = categoria, euros = salario) %>%
+  distinct()
+```
+:::
+::::
+
+**Con `AS`** (más legible y recomendable). En R, `rename()` renombra sin descartar columnas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT categoria AS rango, salario AS euros
+FROM empleados
+WHERE ciudad = 'Burgos';
+```
+:::
+::: {.caja-r}
+```{r}
+empleados %>%
+  filter(ciudad == "Burgos") %>%
+  rename(rango = categoria, euros = salario) %>%
+  select(rango, euros) %>%
+  distinct()
+```
+:::
+::::
+
+## Renombrado en operaciones de conjunto
+
+Recreamos `profesores` con los apellidos en columnas `apellido1` y `apellido2`, de modo que ya **no se llaman igual** que en `alumnos`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS alumnos, profesores CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE alumnos (
+  dni       integer PRIMARY KEY,
+  Nombre    char(20),
+  Ape1      char(20),
+  Ape2      char(20),
+  matricula numeric(8) NOT NULL UNIQUE
+);
+```
+
+```{sql, connection = con}
+INSERT INTO alumnos VALUES
+  (1, 'Pepe', 'Alvarez', 'Alvarez', 1),
+  (2, 'Juan', 'Alvarez', 'Alvarez', 2),
+  (3, 'Pepe', 'Alvarez', 'Garcia',  3);
+```
+
+```{sql, connection = con}
+CREATE TABLE profesores (
+  dni       numeric(8) PRIMARY KEY,
+  nombre    varchar(30),
+  apellido1 char(20),
+  apellido2 char(20),
+  nro       numeric(8) NOT NULL UNIQUE
+);
+```
+
+```{sql, connection = con}
+INSERT INTO profesores VALUES
+  (1, 'Pepe', 'Alvarez', 'Alvarez', 4),
+  (3, 'Juan', 'Alvarez', 'Lopez',   5),
+  (2, 'Pepe', 'Alvarez', 'Garcia',  6),
+  (4, 'Juan', 'Alvarez', 'Lopez',   7);
+```
+:::
+::: {.caja-r}
+```{r}
+alumnos    <- leer("alumnos")
+profesores <- leer("profesores")
+
+alumnos
+profesores
+```
+:::
+::::
+
+**Unión de columnas con distinto nombre.** SQL solo comprueba la compatibilidad **por posición** y toma los nombres de la primera consulta (fíjate además en que se han cruzado `ape2` y `ape1` y SQL no protesta, porque los dominios son compatibles). `dplyr` empareja por **nombre**, así que la misma operación falla. Para imitar el comportamiento de SQL habría que renombrar la segunda tabla por posición.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nro, nombre, apellido1, apellido2 FROM profesores
+WHERE apellido2 = 'Alvarez'
+UNION
+SELECT matricula, nombre, ape2, ape1 FROM alumnos
+ORDER BY nro;
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+# Falla: dplyr exige que las columnas se llamen igual
+profesores %>%
+  filter(apellido2 == "Alvarez") %>%
+  select(nro, nombre, apellido1, apellido2) %>%
+  union(alumnos %>% select(matricula, nombre, ape2, ape1)) %>%
+  arrange(nro)
+```
+
+```{r}
+# Imitando a SQL: se renombra por posición la segunda relación
+profesores %>%
+  filter(apellido2 == "Alvarez") %>%
+  select(nro, nombre, apellido1, apellido2) %>%
+  union(alumnos %>%
+          select(matricula, nombre, ape2, ape1) %>%
+          set_names(c("nro", "nombre", "apellido1", "apellido2"))) %>%
+  arrange(nro)
+```
+:::
+::::
+
+**Lo correcto es renombrar**, porque el AR lo exige: ambas relaciones deben tener el mismo esquema. Pero cuidado: tras el renombrado el atributo `nro` **ya no existe** en el resultado, así que no se puede ordenar por él.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con, error = TRUE}
+SELECT nro AS id, nombre, apellido1 AS ape1, apellido2 AS ape2
+FROM profesores
+WHERE apellido2 = 'Alvarez'
+UNION
+SELECT matricula AS id, nombre, ape1, ape2
+FROM alumnos
+ORDER BY nro, ape1, ape2;
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+profesores %>%
+  filter(apellido2 == "Alvarez") %>%
+  select(id = nro, nombre, ape1 = apellido1, ape2 = apellido2) %>%
+  union(alumnos %>% select(id = matricula, nombre, ape1, ape2)) %>%
+  arrange(nro, ape1, ape2)
+```
+:::
+::::
+
+**Ordenando por el nuevo nombre** funciona en ambos lenguajes:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nro AS id, nombre, apellido1 AS ape1, apellido2 AS ape2
+FROM profesores
+WHERE apellido2 = 'Alvarez'
+UNION
+SELECT matricula AS id, nombre, ape1, ape2
+FROM alumnos
+ORDER BY id, ape1, ape2;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  filter(apellido2 == "Alvarez") %>%
+  select(id = nro, nombre, ape1 = apellido1, ape2 = apellido2) %>%
+  union(alumnos %>% select(id = matricula, nombre, ape1, ape2)) %>%
+  arrange(id, ape1, ape2)
+```
+:::
+::::
+
+# Producto cartesiano (×)
+
+El producto cartesiano A × B genera una relación con:
+
+1. **Todos los atributos** de A y de B (grado = suma de grados). Si hay atributos con el mismo nombre, aparecen repetidos.
+2. **Todas las combinaciones** posibles de filas de A con filas de B (cardinalidad = producto de cardinalidades), tengan sentido o no.
+
+En SQL basta con poner las tablas separadas por comas en el `FROM`; en R usamos `cross_join()`.
+
+<div class="nota">
+En el script original se nombraban algunos atributos con tilde (`población`, `región`, `comisión`). Aquí se usan sin tilde (`poblacion`, `region`, `comision`) para no tener que escribirlos entre comillas invertidas en R.
+</div>
+
+## Tablas de trabajo: `oficina`, `categoria` y `empleado`
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS empleado, categoria, oficina CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE oficina (
+  n_oficina integer PRIMARY KEY,
+  poblacion char(15),
+  region    char(15),
+  ventas    numeric(10,2),
+  objetivo  numeric(10,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO oficina VALUES
+  (1, 'Madrid', 'CENTRO', 1000000, 1200000),
+  (2, 'Bilbao', 'NORTE',   900000, 1000000);
+```
+
+```{sql, connection = con}
+CREATE TABLE categoria (
+  cargo char(15) PRIMARY KEY,
+  sal   numeric(6,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO categoria VALUES
+  ('VENDEDOR', 2000), ('ADMINISTRATIVO', 1000), ('JEFE', 4000);
+```
+
+```{sql, connection = con}
+CREATE TABLE empleado (
+  cod      integer PRIMARY KEY,
+  nombre   char(15),
+  oficina  integer REFERENCES oficina,
+  cargo    char(15) REFERENCES categoria,
+  comision numeric(2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleado VALUES
+  (1, 'Pepe',   1, 'VENDEDOR',       10),
+  (2, 'Maria',  1, 'VENDEDOR',       15),
+  (3, 'Juan',   1, 'JEFE',           25),
+  (4, 'Carlos', 2, 'JEFE',           20),
+  (5, 'Luis',   2, 'ADMINISTRATIVO', NULL);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina   <- leer("oficina")    # grado 5, cardinalidad 2
+categoria <- leer("categoria")  # grado 2, cardinalidad 3
+empleado  <- leer("empleado")   # grado 5, cardinalidad 5
+
+oficina
+categoria
+empleado
+```
+:::
+::::
+
+## Producto cartesiano de `oficina × empleado`
+
+Resultado: 5 + 5 = 10 columnas y 2 × 5 = 10 filas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM oficina, empleado;
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  cross_join(empleado)
+```
+:::
+::::
+
+Con **tres tablas** el atributo `cargo` está en `empleado` y en `categoria`. SQL lo muestra dos veces con el mismo nombre; R no permite dos columnas con igual nombre y les añade un **sufijo** (`.x`, `.y` por defecto). (La función `tidyr::crossing()` también hace combinaciones, pero además ordena y elimina filas duplicadas, así que no es un producto cartesiano "puro").
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM oficina, empleado, categoria;
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  cross_join(empleado) %>%
+  cross_join(categoria)
+```
+:::
+::::
+
+¿Y si queremos proyectar precisamente el atributo duplicado? Ambos lenguajes fallan, pero por motivos distintos: en SQL la referencia es **ambigua**; en R la columna `cargo` **ya no existe** (se llama `cargo.x` y `cargo.y`).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con, error = TRUE}
+SELECT *, cargo
+FROM oficina, empleado, categoria;
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+oficina %>%
+  cross_join(empleado) %>%
+  cross_join(categoria) %>%
+  select(cargo)
+```
+:::
+::::
+
+## Alias de tabla
+
+Para indicar de qué tabla procede un atributo, SQL usa la notación `tabla.atributo`, y admite **alias** cortos para las tablas (`FROM empleado AS e`). En `dplyr` no existen alias de tabla, pero su papel lo cumple el argumento `suffix` de los joins: cada columna repetida recibe el sufijo de la tabla de la que procede.
+
+**Calificando atributos con el nombre de la tabla:**
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.n_oficina, oficina.ventas, empleado.cargo
+FROM oficina, empleado;
+```
+:::
+::: {.caja-r}
+```{r}
+# Sin nombres repetidos no hace falta distinguir la tabla
+oficina %>%
+  cross_join(empleado) %>%
+  select(n_oficina, ventas, cargo)
+```
+:::
+::::
+
+**Alias de tabla** para distinguir un atributo que existe en las dos relaciones:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT e.nombre, e.cargo, c.cargo
+FROM empleado AS e, categoria AS c;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(categoria, suffix = c("_e", "_c")) %>%
+  select(nombre, cargo_e, cargo_c)
+```
+:::
+::::
+
+Solo se puede usar una tabla que esté en el `FROM`: aquí `categoria` no participa en el producto, así que ambos lenguajes dan error.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con, error = TRUE}
+SELECT categoria.cargo
+FROM oficina, empleado;
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+oficina %>%
+  cross_join(empleado) %>%
+  select(sal)
+```
+:::
+::::
+
+# Operaciones binarias: *joins*
+
+Un *join* es un producto cartesiano seguido de una selección que se queda solo con las combinaciones que cumplen una condición. Según esa condición hablamos de *theta join*, *equi join* o *join natural*; y según qué filas se conservan, de *join interno* o *externo*.
+
+## Theta join (θ)
+
+El *theta join* fusiona dos tablas según una condición θ cualquiera (`=`, `<`, `>`, `!=`...). Si la condición es una igualdad se llama **equi join**. En esta sección lo construimos "a mano": producto cartesiano + `WHERE` en SQL, y `cross_join()` + `filter()` en R.
+
+### Tablas de trabajo
+
+Igual que antes, pero ahora Luis tiene comisión 0 en lugar de `NULL`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS empleado, categoria, oficina CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE oficina (
+  n_oficina integer PRIMARY KEY,
+  poblacion char(15),
+  region    char(15),
+  ventas    numeric(10,2),
+  objetivo  numeric(10,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO oficina VALUES
+  (1, 'Madrid', 'CENTRO', 1000000, 1200000),
+  (2, 'Bilbao', 'NORTE',   900000, 1000000);
+```
+
+```{sql, connection = con}
+CREATE TABLE categoria (
+  cargo char(15) PRIMARY KEY,
+  sal   numeric(6,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO categoria VALUES
+  ('VENDEDOR', 2000), ('ADMINISTRATIVO', 1000), ('JEFE', 4000);
+```
+
+```{sql, connection = con}
+CREATE TABLE empleado (
+  cod      integer PRIMARY KEY,
+  nombre   char(15),
+  oficina  integer REFERENCES oficina,
+  cargo    char(15) REFERENCES categoria,
+  comision numeric(2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleado VALUES
+  (1, 'Pepe',   1, 'VENDEDOR',       10),
+  (2, 'Maria',  1, 'VENDEDOR',       15),
+  (3, 'Juan',   1, 'JEFE',           25),
+  (4, 'Carlos', 2, 'JEFE',           20),
+  (5, 'Luis',   2, 'ADMINISTRATIVO',  0);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina   <- leer("oficina")
+categoria <- leer("categoria")
+empleado  <- leer("empleado")
+
+empleado
+```
+:::
+::::
+
+### Join derivado "a mano"
+
+Partimos del producto cartesiano: cada empleado aparece emparejado con **todas** las oficinas (fíjate en Carlos, que sale en Madrid y en Bilbao).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT nombre, poblacion
+FROM empleado, oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  select(nombre, poblacion) %>%
+  distinct()
+```
+:::
+::::
+
+**Equi join:** exigiendo que la oficina del empleado coincida con la oficina de la tabla `oficina`, cada empleado queda solo con la suya.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT nombre, poblacion
+FROM empleado, oficina
+WHERE oficina = n_oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina) %>%
+  select(nombre, poblacion) %>%
+  distinct()
+```
+:::
+::::
+
+El mismo equi join mostrando todos los atributos:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT *
+FROM empleado, oficina
+WHERE empleado.oficina = oficina.n_oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina) %>%
+  distinct()
+```
+:::
+::::
+
+**Theta join (no equi):** empleados cuya comisión sobre las ventas supera un octavo del objetivo.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT nombre
+FROM empleado, oficina
+WHERE comision * ventas / 100 > objetivo / 8;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(comision * ventas / 100 > objetivo / 8) %>%
+  select(nombre) %>%
+  distinct()
+```
+:::
+::::
+
+**¡Cuidado!** Ese theta join no evita las **filas espurias**: si miramos todos los atributos vemos empleados emparejados con oficinas que no son las suyas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT *
+FROM empleado, oficina
+WHERE comision * ventas / 100 > objetivo / 8;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(comision * ventas / 100 > objetivo / 8) %>%
+  distinct()
+```
+:::
+::::
+
+Se ve más claro proyectando la oficina del empleado (`oficina`) junto a la oficina con la que se ha combinado (`n_oficina`):
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT nombre, oficina, n_oficina
+FROM empleado, oficina
+WHERE comision * ventas / 100 > objetivo / 8;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(comision * ventas / 100 > objetivo / 8) %>%
+  select(nombre, oficina, n_oficina) %>%
+  distinct()
+```
+:::
+::::
+
+Añadiendo la condición de equi join nos aseguramos de que cada empleado se evalúa **solo en su oficina**:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT nombre, oficina, n_oficina
+FROM empleado, oficina
+WHERE oficina = n_oficina
+  AND comision * ventas / 100 > objetivo / 8;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina,
+         comision * ventas / 100 > objetivo / 8) %>%
+  select(nombre, oficina, n_oficina) %>%
+  distinct()
+```
+:::
+::::
+
+Y mostrando todos los atributos:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT DISTINCT *
+FROM empleado, oficina
+WHERE oficina = n_oficina
+  AND comision * ventas / 100 > objetivo / 8;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina,
+         comision * ventas / 100 > objetivo / 8) %>%
+  distinct()
+```
+:::
+::::
+
+## Join natural
+
+El **join natural** es un equi join sobre los atributos **comunes** (mismo nombre y dominio) en el que esos atributos aparecen una sola vez. Antes de usar la sintaxis específica, lo construimos a mano para entender qué ocurre cuando los atributos de enlace tienen nombres distintos o iguales.
+
+### Tablas de trabajo
+
+Ahora la oficina de Bilbao tiene ventas de 400.000.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS empleado, categoria, oficina CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE oficina (
+  n_oficina integer PRIMARY KEY,
+  poblacion char(15),
+  region    char(15),
+  ventas    numeric(10,2),
+  objetivo  numeric(10,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO oficina VALUES
+  (1, 'Madrid', 'CENTRO', 1000000, 1200000),
+  (2, 'Bilbao', 'NORTE',   400000, 1000000);
+```
+
+```{sql, connection = con}
+CREATE TABLE categoria (
+  cargo char(15) PRIMARY KEY,
+  sal   numeric(6,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO categoria VALUES
+  ('VENDEDOR', 2000), ('ADMINISTRATIVO', 1000), ('JEFE', 4000);
+```
+
+```{sql, connection = con}
+CREATE TABLE empleado (
+  cod      integer PRIMARY KEY,
+  nombre   char(15),
+  oficina  integer REFERENCES oficina,    -- FK
+  cargo    char(15) REFERENCES categoria, -- FK
+  comision numeric(2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleado VALUES
+  (1, 'Pepe',   1, 'VENDEDOR',       10),
+  (2, 'Maria',  1, 'VENDEDOR',       15),
+  (3, 'Juan',   1, 'JEFE',           25),
+  (4, 'Carlos', 2, 'JEFE',           20),
+  (5, 'Luis',   2, 'ADMINISTRATIVO',  0);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina   <- leer("oficina")
+categoria <- leer("categoria")
+empleado  <- leer("empleado")
+
+oficina
+```
+:::
+::::
+
+### Atributos de enlace con distinto nombre
+
+Producto cartesiano `empleado × oficina`: 5 × 2 = 10 filas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM empleado, oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina)
+```
+:::
+::::
+
+Al exigir `oficina = n_oficina` cada empleado sale solo con su oficina (la tabla "padre"), así que el número de filas es igual al número de empleados: 5.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM empleado, oficina
+WHERE oficina = n_oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina)
+```
+:::
+::::
+
+### Atributos de enlace con el mismo nombre
+
+Entre `empleado` y `categoria` el atributo común es `cargo`. Escribirlo sin más produce un error en ambos lenguajes: en SQL por ambigüedad; en R porque tras el producto las columnas se llaman `cargo.x` y `cargo.y`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con, error = TRUE}
+SELECT *
+FROM empleado, categoria
+WHERE cargo = cargo;
+```
+:::
+::: {.caja-r}
+```{r, error = TRUE}
+empleado %>%
+  cross_join(categoria) %>%
+  filter(cargo == cargo)
+```
+:::
+::::
+
+**Calificando el atributo** con la tabla (SQL) o con el sufijo (R):
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM empleado, categoria
+WHERE empleado.cargo = categoria.cargo;
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  cross_join(categoria, suffix = c("_empleado", "_categoria")) %>%
+  filter(cargo_empleado == cargo_categoria)
+```
+:::
+::::
+
+### Join de tres tablas
+
+Para unir tres relaciones hacen falta **dos condiciones de enlace** (como tres vagones necesitan dos enganches). El resultado vuelve a tener 5 filas, una por empleado.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria, empleado, oficina
+WHERE oficina = n_oficina              -- une empleado y oficina
+  AND categoria.cargo = empleado.cargo; -- une categoria y empleado
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  cross_join(empleado, suffix = c("_categoria", "_empleado")) %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina,                # une empleado y oficina
+         cargo_categoria == cargo_empleado) %>% # une categoria y empleado
+  arrange(cod)
+```
+:::
+::::
+
+## Join con clave compuesta
+
+Cuando la clave primaria es **compuesta**, la condición de enlace debe incluir **todos** sus atributos. Aquí la oficina se identifica por el par (`n_oficina`, `region`).
+
+### Tablas de trabajo
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS oficina, empleado, categoria CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE oficina (
+  n_oficina integer,
+  poblacion char(15),
+  region    char(15),
+  ventas    numeric(10,2),
+  objetivo  numeric(10,2),
+  PRIMARY KEY (n_oficina, region)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO oficina VALUES
+  (1, 'Madrid', 'CENTRO', 1000000, 1200000),
+  (1, 'Bilbao', 'NORTE',   400000, 1000000),
+  (2, 'Burgos', 'CENTRO',  400000,  800000);
+```
+
+```{sql, connection = con}
+CREATE TABLE categoria (
+  cargo char(15) PRIMARY KEY,
+  sal   numeric(6,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO categoria VALUES
+  ('VENDEDOR', 2000), ('ADMINISTRATIVO', 1000), ('JEFE', 4000);
+```
+
+```{sql, connection = con}
+CREATE TABLE empleado (
+  cod      integer PRIMARY KEY,
+  nombre   char(15),
+  oficina  integer,
+  region   char(15),
+  cargo    char(15) REFERENCES categoria,
+  comision numeric(2),
+  FOREIGN KEY (oficina, region) REFERENCES oficina
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleado VALUES
+  (1, 'Pepe',   1, 'CENTRO', 'VENDEDOR',       10),
+  (2, 'Maria',  1, 'CENTRO', 'VENDEDOR',       15),
+  (3, 'Juan',   1, 'CENTRO', 'JEFE',           25),
+  (4, 'Carlos', 1, 'NORTE',  'JEFE',           20),
+  (5, 'Luis',   2, 'CENTRO', 'ADMINISTRATIVO',  0);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina   <- leer("oficina")
+categoria <- leer("categoria")
+empleado  <- leer("empleado")
+
+oficina
+empleado
+```
+:::
+::::
+
+### Join de tres tablas con clave compuesta
+
+`oficina` y `n_oficina` tienen nombres únicos y no necesitan calificarse; `region` y `cargo` sí, porque están en dos tablas. En R, además de la versión "a mano", se muestra la forma idiomática con `inner_join()` y `join_by()`, que veremos en detalle más adelante.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria, empleado, oficina
+WHERE empleado.oficina = oficina.n_oficina
+  AND empleado.region  = oficina.region    -- une empleado y oficina
+  AND categoria.cargo  = empleado.cargo;   -- une categoria y empleado
+```
+:::
+::: {.caja-r}
+```{r}
+# "A mano": producto cartesiano + filtro
+categoria %>%
+  cross_join(empleado, suffix = c("_cat", "_emp")) %>%
+  cross_join(oficina, suffix = c("_emp", "_ofi")) %>%
+  filter(oficina == n_oficina,
+         region_emp == region_ofi,
+         cargo_cat == cargo_emp)
+```
+
+```{r}
+# Idiomático: joins encadenados
+categoria %>%
+  inner_join(empleado, by = "cargo") %>%
+  inner_join(oficina, by = join_by(oficina == n_oficina, region))
+```
+:::
+::::
+
+### Filtrando el resultado del join
+
+Empleados con salario mayor que 2000, con su salario y las ventas de su oficina:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, sal, ventas
+FROM categoria, empleado, oficina
+WHERE oficina = n_oficina AND empleado.region = oficina.region
+  AND categoria.cargo = empleado.cargo
+  AND sal > 2000;
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  cross_join(empleado, suffix = c("_cat", "_emp")) %>%
+  cross_join(oficina, suffix = c("_emp", "_ofi")) %>%
+  filter(oficina == n_oficina & region_emp == region_ofi &
+           cargo_cat == cargo_emp &
+           sal > 2000) %>%
+  select(nombre, sal, ventas)
+```
+:::
+::::
+
+**Salario mayor que 2000 o ventas mayores que 500.000, sin paréntesis.** `AND` tiene **más prioridad** que `OR` (lo mismo ocurre con `&` y `|` en R), así que la condición se lee como `(join AND sal > 2000) OR ventas > 500000`: cualquier fila del producto cartesiano con ventas altas pasa el filtro, aunque no cumpla las condiciones de enlace.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, sal, ventas
+FROM categoria, empleado, oficina
+WHERE oficina = n_oficina
+  AND empleado.region = oficina.region
+  AND categoria.cargo = empleado.cargo
+  AND sal > 2000
+   OR ventas > 500000;
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  cross_join(empleado, suffix = c("_cat", "_emp")) %>%
+  cross_join(oficina, suffix = c("_emp", "_ofi")) %>%
+  filter(oficina == n_oficina &
+           region_emp == region_ofi &
+           cargo_cat == cargo_emp &
+           sal > 2000 |
+           ventas > 500000) %>%
+  select(nombre, sal, ventas)
+```
+:::
+::::
+
+**Con paréntesis** el resultado es el esperado:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, sal, ventas
+FROM categoria, empleado, oficina
+WHERE oficina = n_oficina
+  AND empleado.region = oficina.region
+  AND categoria.cargo = empleado.cargo
+  AND (sal > 2000 OR ventas > 500000);
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  cross_join(empleado, suffix = c("_cat", "_emp")) %>%
+  cross_join(oficina, suffix = c("_emp", "_ofi")) %>%
+  filter(oficina == n_oficina &
+           region_emp == region_ofi &
+           cargo_cat == cargo_emp &
+           (sal > 2000 | ventas > 500000)) %>%
+  select(nombre, sal, ventas)
+```
+:::
+::::
+
+**Explicación de la conducta sin paréntesis.** La consulta sin paréntesis equivale a unir el join filtrado por salario con el producto cartesiano **completo** filtrado por ventas:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT nombre, sal, ventas
+FROM categoria, empleado, oficina
+WHERE oficina = n_oficina
+  AND empleado.region = oficina.region
+  AND categoria.cargo = empleado.cargo
+  AND sal > 2000
+UNION
+SELECT nombre, sal, ventas
+FROM categoria, empleado, oficina
+WHERE ventas > 500000;
+```
+:::
+::: {.caja-r}
+```{r}
+producto <- categoria %>%
+  cross_join(empleado, suffix = c("_cat", "_emp")) %>%
+  cross_join(oficina, suffix = c("_emp", "_ofi"))
+
+producto %>%
+  filter(oficina == n_oficina, region_emp == region_ofi,
+         cargo_cat == cargo_emp, sal > 2000) %>%
+  select(nombre, sal, ventas) %>%
+  union(producto %>%
+          filter(ventas > 500000) %>%
+          select(nombre, sal, ventas))
+```
+:::
+::::
+
+## Join externo construido "a mano"
+
+En un join **interno** las filas que no encuentran pareja en la otra tabla desaparecen del resultado. En un join **externo** forzamos a que aparezcan, rellenando con `NULL` (`NA` en R) los atributos de la otra tabla. Antes de ver la sintaxis específica, lo construimos con las operaciones básicas del AR.
+
+### Tablas de trabajo
+
+Añadimos una oficina sin empleados (Burgos), una categoría sin empleados (RECADERO), dos empleados sin oficina y uno sin cargo.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS empleado, categoria, oficina CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE oficina (
+  n_oficina integer PRIMARY KEY,
+  poblacion char(15),
+  region    char(15),
+  ventas    numeric(10,2),
+  objetivo  numeric(10,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO oficina VALUES
+  (1, 'Madrid', 'CENTRO', 1000000, 1200000),
+  (2, 'Bilbao', 'NORTE',   900000, 1000000),
+  (3, 'Burgos', 'CENTRO',  500000,  800000);
+```
+
+```{sql, connection = con}
+CREATE TABLE categoria (
+  cargo char(15) PRIMARY KEY,
+  sal   numeric(6,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO categoria VALUES
+  ('VENDEDOR', 2000), ('ADMINISTRATIVO', 1000),
+  ('JEFE', 4000), ('RECADERO', 1000);
+```
+
+```{sql, connection = con}
+CREATE TABLE empleado (
+  cod      integer PRIMARY KEY,
+  nombre   char(15),
+  oficina  integer REFERENCES oficina,
+  cargo    char(15) REFERENCES categoria,
+  comision numeric(2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO empleado VALUES
+  (1, 'Pepe',    1,    'VENDEDOR',       10),
+  (2, 'Maria',   1,    'VENDEDOR',       15),
+  (3, 'Juan',    1,    'JEFE',           25),
+  (4, 'Carlos',  2,    'JEFE',           20),
+  (5, 'Luis',    2,    'ADMINISTRATIVO',  0),
+  (6, 'Alberto', NULL, 'VENDEDOR',       10),  -- sin oficina
+  (7, 'Pedro',   NULL, 'VENDEDOR',       15),  -- sin oficina
+  (8, 'Rodrigo', 1,    NULL,             15);  -- sin cargo
+```
+:::
+::: {.caja-r}
+```{r}
+oficina   <- leer("oficina")
+categoria <- leer("categoria")
+empleado  <- leer("empleado")
+
+oficina
+categoria
+empleado
+```
+:::
+::::
+
+### Join interno tradicional
+
+No aparecen Alberto, Pedro ni Rodrigo (tienen `NULL` en algún atributo de enlace), ni tampoco la oficina de Burgos ni la categoría RECADERO.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria, empleado, oficina
+WHERE oficina = n_oficina               -- une empleado y oficina
+  AND categoria.cargo = empleado.cargo; -- une categoria y empleado
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  cross_join(empleado, suffix = c("_cat", "_emp")) %>%
+  cross_join(oficina) %>%
+  filter(oficina == n_oficina,
+         cargo_cat == cargo_emp) %>%
+  arrange(cod)
+```
+:::
+::::
+
+### Paso 1: oficinas que tienen empleados
+
+Proyectamos solo los atributos de `oficina` a partir del join (cada oficina se repite tantas veces como empleados tiene).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*
+FROM oficina, empleado
+WHERE oficina = n_oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  cross_join(empleado) %>%
+  filter(oficina == n_oficina) %>%
+  select(all_of(names(oficina)))
+```
+:::
+::::
+
+### Paso 2: oficinas sin empleados (diferencia)
+
+Restando las oficinas con empleados al total de oficinas obtenemos las que no tienen ninguno.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT * FROM oficina
+EXCEPT
+SELECT oficina.*
+FROM oficina, empleado
+WHERE oficina = n_oficina;
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  setdiff(oficina %>%
+            cross_join(empleado) %>%
+            filter(oficina == n_oficina) %>%
+            select(all_of(names(oficina))))
+```
+:::
+::::
+
+### Paso 3: guardar la consulta (vista / objeto)
+
+En SQL podemos guardar la consulta como una **vista**: no se materializa, se vuelve a ejecutar cada vez que se consulta. En R el equivalente más cercano es guardar el resultado en un **objeto** (aunque este sí queda materializado en memoria). Por cierto, `dplyr` tiene un atajo para "filas de A sin pareja en B": `anti_join()`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP VIEW IF EXISTS oficinas_sin_empleados;
+```
+
+```{sql, connection = con}
+CREATE VIEW oficinas_sin_empleados AS
+SELECT * FROM oficina
+EXCEPT
+SELECT oficina.*
+FROM oficina, empleado
+WHERE oficina = n_oficina;
+```
+
+```{sql, connection = con}
+SELECT * FROM oficinas_sin_empleados;
+```
+:::
+::: {.caja-r}
+```{r}
+oficinas_sin_empleados <- oficina %>%
+  setdiff(oficina %>%
+            cross_join(empleado) %>%
+            filter(oficina == n_oficina) %>%
+            select(all_of(names(oficina))))
+
+oficinas_sin_empleados
+
+# Atajo equivalente
+oficina %>% anti_join(empleado, by = join_by(n_oficina == oficina))
+```
+:::
+::::
+
+### Paso 4: unión del join interno con las oficinas sin empleados
+
+Para completar el join externo unimos el join interno con las oficinas sin empleados, dando valor nulo a los cuatro atributos de `empleado`. Esos nulos son imprescindibles para mantener la compatibilidad de unión (prueba a quitarlos).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT n_oficina, poblacion, region, ventas, objetivo,
+       cod, nombre, cargo, comision
+FROM oficina, empleado
+WHERE oficina = n_oficina
+UNION
+SELECT n_oficina, poblacion, region, ventas, objetivo,
+       NULL, NULL, NULL, NULL
+FROM oficinas_sin_empleados;
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  cross_join(empleado) %>%
+  filter(oficina == n_oficina) %>%
+  select(n_oficina, poblacion, region, ventas, objetivo,
+         cod, nombre, cargo, comision) %>%
+  union(oficinas_sin_empleados %>%
+          mutate(cod = NA_integer_, nombre = NA_character_,
+                 cargo = NA_character_, comision = NA_real_)) %>%
+  arrange(n_oficina, cod)
+```
+:::
+::::
+
+# Joins cualificados
+
+Desde el estándar SQL-92 existe una sintaxis específica para cada tipo de join en la cláusula `FROM`. `dplyr` tiene una función para cada uno de ellos:
+
+| SQL | R (`dplyr`) |
+|:----|:------------|
+| `CROSS JOIN` | `cross_join()` |
+| `[INNER] JOIN ... ON` | `inner_join(..., by = join_by(...))` |
+| `LEFT [OUTER] JOIN` | `left_join()` |
+| `RIGHT [OUTER] JOIN` | `right_join()` |
+| `FULL [OUTER] JOIN` | `full_join()` |
+| `JOIN ... USING (a)` | `inner_join(..., by = "a")` |
+| `NATURAL JOIN` | `inner_join()` sin `by` |
+
+Una diferencia importante: con `ON`, SQL conserva los **dos** atributos de enlace, mientras que `dplyr` por defecto se queda solo con **uno**. Para obtener el mismo resultado que SQL se usa `keep = TRUE`.
+
+## `CROSS JOIN`
+
+Representa el producto cartesiano: 3 oficinas × 8 empleados = 24 filas. Es equivalente a poner las tablas separadas por comas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina CROSS JOIN empleado;
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  cross_join(empleado)
+```
+:::
+::::
+
+## `INNER JOIN`
+
+La forma tradicional (producto cartesiano + `WHERE`) y la cualificada con `INNER JOIN ... ON` dan el mismo resultado. La palabra `INNER` es opcional porque los joins son internos por defecto.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina INNER JOIN empleado ON (oficina = n_oficina);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  inner_join(empleado, by = join_by(n_oficina == oficina), keep = TRUE) %>%
+  arrange(cod)
+```
+:::
+::::
+
+Sin `INNER` y, en R, sin `keep = TRUE` (el atributo de enlace aparece una sola vez):
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina JOIN empleado ON (oficina = n_oficina); -- igualdad = equi join
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  inner_join(empleado, by = join_by(n_oficina == oficina)) %>%
+  arrange(cod)
+```
+:::
+::::
+
+La condición del `ON` puede ser **cualquier expresión lógica**. Con `ON (TRUE)` todas las combinaciones la cumplen, así que obtenemos otra vez el producto cartesiano (24 filas).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina JOIN empleado ON (TRUE);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  cross_join(empleado)
+```
+:::
+::::
+
+**Theta join en el `ON`.** `join_by()` admite igualdades y desigualdades entre columnas, pero no expresiones aritméticas; en R lo más directo en un join interno es unir y después filtrar.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM oficina INNER JOIN empleado
+  ON (oficina = n_oficina AND comision * ventas / 100 > objetivo / 8);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  inner_join(empleado, by = join_by(n_oficina == oficina), keep = TRUE) %>%
+  filter(comision * ventas / 100 > objetivo / 8)
+```
+:::
+::::
+
+## `OUTER JOIN`: `LEFT`, `RIGHT` y `FULL`
+
+El join externo permite elegir qué tabla "aporta" las filas sin pareja: la de la izquierda (`LEFT`), la de la derecha (`RIGHT`) o ambas (`FULL`). La palabra `OUTER` es opcional.
+
+### `LEFT JOIN`
+
+Salen todas las oficinas, incluida Burgos (`n_oficina = 3`), que no tiene empleados.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM oficina LEFT OUTER JOIN empleado ON (oficina = n_oficina);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  left_join(empleado, by = join_by(n_oficina == oficina), keep = TRUE) %>%
+  arrange(n_oficina, cod)
+```
+:::
+::::
+
+### `RIGHT JOIN`
+
+Obtenemos lo mismo poniendo `oficina` a la derecha. Observa que con `SELECT *` cambia el **orden de los atributos**: primero van los de la tabla de la izquierda.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM empleado RIGHT OUTER JOIN oficina ON (oficina = n_oficina);
+```
+:::
+::: {.caja-r}
+```{r}
+empleado %>%
+  right_join(oficina, by = join_by(oficina == n_oficina), keep = TRUE) %>%
+  arrange(n_oficina, cod)
+```
+:::
+::::
+
+### Theta join externo
+
+Queremos **todas las oficinas**, cada una con los empleados que cumplen el objetivo; las oficinas sin empleados que lo cumplan deben aparecer con nulos. Aquí hay una diferencia importante: en SQL la condición va **dentro del `ON`** y forma parte del emparejamiento. En R, si filtramos **después** del `left_join()`, las filas con `NA` no pasan el filtro y perdemos las oficinas sin pareja: el resultado ya no es un join externo.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina LEFT OUTER JOIN empleado
+  ON (oficina = n_oficina AND comision * ventas / 100 > objetivo / 8);
+```
+:::
+::: {.caja-r}
+```{r}
+# INCORRECTO: filtrar después elimina las oficinas sin pareja
+oficina %>%
+  left_join(empleado, by = join_by(n_oficina == oficina), keep = TRUE) %>%
+  filter(comision * ventas / 100 > objetivo / 8)
+```
+
+```{r}
+# CORRECTO: llevar la condición al emparejamiento.
+# comision * ventas / 100 > objetivo / 8  <=>  comision > umbral,
+# con umbral = objetivo * 100 / (8 * ventas), calculado en oficina
+oficina %>%
+  mutate(umbral = objetivo * 100 / (8 * ventas)) %>%
+  left_join(empleado,
+            by = join_by(n_oficina == oficina, umbral < comision),
+            keep = TRUE) %>%
+  select(-umbral)
+```
+:::
+::::
+
+### `FULL JOIN`
+
+Todas las oficinas aunque no tengan empleados y todos los empleados aunque no tengan oficina.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina FULL OUTER JOIN empleado
+  ON (oficina = n_oficina);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  full_join(empleado, by = join_by(n_oficina == oficina), keep = TRUE)
+```
+:::
+::::
+
+También acepta un theta join; al ser más restrictivo, deja más nulos. En R usamos de nuevo el umbral precalculado dentro de `join_by()`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT oficina.*, empleado.*
+FROM oficina FULL OUTER JOIN empleado
+  ON (comision * ventas / 100 > objetivo / 8 AND oficina = n_oficina);
+```
+:::
+::: {.caja-r}
+```{r}
+oficina %>%
+  mutate(umbral = objetivo * 100 / (8 * ventas)) %>%
+  full_join(empleado,
+            by = join_by(n_oficina == oficina, umbral < comision),
+            keep = TRUE) %>%
+  select(-umbral)
+```
+:::
+::::
+
+<div class="nota">
+**Nulos en los joins.** En SQL `NULL = NULL` no es cierto, así que dos nulos nunca emparejan. En `dplyr`, por defecto, `NA` **sí** empareja con `NA`. Para reproducir el comportamiento de SQL cuando pueda haber nulos en ambas tablas, añade `na_matches = "never"` al join.
+</div>
+
+## `JOIN ... USING` (lista de atributos)
+
+`USING` se emplea cuando los atributos de enlace **se llaman igual** en ambas tablas. En `dplyr` es simplemente el argumento `by = "atributo"` (o un vector de atributos).
+
+**`INNER JOIN` con `USING`.** Con `categoria.*, empleado.*` SQL muestra `cargo` dos veces; en R sale una sola vez salvo que pidamos `keep = TRUE`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT categoria.*, empleado.*
+FROM categoria INNER JOIN empleado USING (cargo);
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  inner_join(empleado, by = "cargo", keep = TRUE) %>%
+  arrange(cod)
+```
+:::
+::::
+
+**`LEFT JOIN` con `USING`:** todas las categorías aunque no tengan empleados; aparece RECADERO.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria LEFT JOIN empleado USING (cargo);
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  left_join(empleado, by = "cargo") %>%
+  arrange(cod)
+```
+:::
+::::
+
+**`FULL JOIN` con `USING`:** las categorías sin empleados, pero también los empleados sin categoría (Rodrigo).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria FULL JOIN empleado USING (cargo);
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  full_join(empleado, by = "cargo") %>%
+  arrange(cod)
+```
+:::
+::::
+
+**`ON` frente a `USING` con `SELECT *`.** Con `ON` el atributo `cargo` se repite; con `USING` y `SELECT *` aparece una sola vez. En R la diferencia la marca `keep`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria INNER JOIN empleado
+  ON (categoria.cargo = empleado.cargo);
+```
+
+```{sql, connection = con}
+SELECT *
+FROM categoria INNER JOIN empleado USING (cargo);
+```
+:::
+::: {.caja-r}
+```{r}
+# Como ON: se conservan los dos atributos de enlace
+categoria %>%
+  inner_join(empleado, by = join_by(cargo), keep = TRUE)
+```
+
+```{r}
+# Como USING: el atributo de enlace aparece una vez
+categoria %>%
+  inner_join(empleado, by = join_by(cargo))
+```
+:::
+::::
+
+## `NATURAL JOIN`
+
+El join natural enlaza automáticamente por **todos** los atributos que se llaman igual. En R basta con no indicar `by`: `dplyr` detecta las columnas comunes e informa de cuáles ha usado (el mensaje "Joining with `by = join_by(cargo)`"). Es cómodo, pero peligroso si dos atributos se llaman igual sin significar lo mismo (lo veremos en el ejercicio 2).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria NATURAL INNER JOIN empleado;
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  inner_join(empleado) %>%
+  arrange(cod)
+```
+:::
+::::
+
+También para joins externos: todas las categorías aunque no tengan empleados.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria NATURAL LEFT JOIN empleado;
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  left_join(empleado) %>%
+  arrange(cod)
+```
+:::
+::::
+
+Y el natural externo completo, donde aparecen cargos sin empleados y empleados sin cargo:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM categoria NATURAL FULL JOIN empleado;
+```
+:::
+::: {.caja-r}
+```{r}
+categoria %>%
+  full_join(empleado) %>%
+  arrange(cod)
+```
+:::
+::::
+
+# Ejercicios de joins
+
+## Ejercicio 1: `ON`, `USING` y `NATURAL`
+
+Dos tablas con una clave compuesta (`a1`, `a2`) que `b` referencia como clave ajena. El objetivo es obtener los atributos (`a1`, `a2`, `a3`, `a4`, `b3`, `b4`) de las tres formas posibles.
+
+<div class="nota">
+En el script original las tablas se creaban vacías. Aquí se añaden unas pocas filas de ejemplo para que los resultados se puedan observar.
+</div>
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS a, b CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE a (
+  a1 integer,
+  a2 integer,
+  a3 integer,
+  a4 integer,
+  PRIMARY KEY (a1, a2)
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE b (
+  a1 integer,
+  a2 integer,
+  b3 integer PRIMARY KEY,
+  b4 integer,
+  FOREIGN KEY (a1, a2) REFERENCES a
+);
+```
+
+```{sql, connection = con}
+INSERT INTO a VALUES (1, 1, 10, 100), (1, 2, 20, 200), (2, 1, 30, 300);
+```
+
+```{sql, connection = con}
+INSERT INTO b VALUES (1, 1, 1, 1000), (1, 1, 2, 2000), (2, 1, 3, 3000);
+```
+:::
+::: {.caja-r}
+```{r}
+a <- leer("a")
+b <- leer("b")
+
+a
+b
+```
+:::
+::::
+
+**1.1. Con `ON`.** Es un theta join (de igualdad): **no** elimina los atributos duplicados, así que `a1` y `a2` salen dos veces con `*` y hay que proyectar calificándolos con la tabla.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM a JOIN b ON (a.a1 = b.a1 AND a.a2 = b.a2);
+```
+
+```{sql, connection = con}
+SELECT a.a1, a.a2, a3, a4, b3, b4
+FROM a JOIN b ON (a.a1 = b.a1 AND a.a2 = b.a2);
+```
+:::
+::: {.caja-r}
+```{r}
+a %>%
+  inner_join(b, by = join_by(a1, a2), keep = TRUE)
+```
+
+```{r}
+a %>%
+  inner_join(b, by = join_by(a1, a2), keep = TRUE) %>%
+  select(a1 = a1.x, a2 = a2.x, a3, a4, b3, b4)
+```
+:::
+::::
+
+**1.2. Con `USING`.** Los atributos comunes se proyectan una sola vez.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT a1, a2, a3, a4, b3, b4
+FROM a JOIN b USING (a1, a2);
+```
+:::
+::: {.caja-r}
+```{r}
+a %>%
+  inner_join(b, by = c("a1", "a2")) %>%
+  select(a1, a2, a3, a4, b3, b4)
+```
+:::
+::::
+
+**1.3. Con `NATURAL`.** Los atributos comunes son precisamente `a1` y `a2`, así que el resultado es el mismo sin necesidad de indicarlos.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM a NATURAL JOIN b;
+```
+:::
+::: {.caja-r}
+```{r}
+a %>%
+  inner_join(b)
+```
+:::
+::::
+
+## Ejercicio 2: el peligro del join natural
+
+Profesores y asignaturas se relacionan por `idprofesor`, que es clave primaria en `profesores` y clave ajena en `asignaturas` (un profesor puede impartir varias asignaturas). El problema es que ambas tablas tienen también un atributo `nombre`, que en una es el nombre del profesor y en la otra el de la asignatura.
+
+<div class="nota">
+El script original no incluía la definición de estas tablas; se han creado unas tablas de ejemplo coherentes con el enunciado.
+</div>
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS asignaturas, profesores, imparte CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE profesores (
+  idprofesor integer PRIMARY KEY,
+  nombre     varchar(20)
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE asignaturas (
+  idasignatura integer PRIMARY KEY,
+  nombre       varchar(20),
+  idprofesor   integer REFERENCES profesores
+);
+```
+
+```{sql, connection = con}
+INSERT INTO profesores VALUES (1, 'Ana'), (2, 'Luis'), (3, 'Marta');
+```
+
+```{sql, connection = con}
+INSERT INTO asignaturas VALUES
+  (1, 'Bases de Datos', 1), (2, 'SIG', 1), (3, 'Estadistica', 2);
+```
+:::
+::: {.caja-r}
+```{r}
+profesores  <- leer("profesores")
+asignaturas <- leer("asignaturas")
+
+profesores
+asignaturas
+```
+:::
+::::
+
+**2.1. Join por `idprofesor`.** Devuelve cada asignatura con su profesor.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM profesores JOIN asignaturas USING (idprofesor);
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  inner_join(asignaturas, by = "idprofesor",
+             suffix = c("_profesor", "_asignatura"))
+```
+:::
+::::
+
+**2.2. Join natural: 0 filas.** `NATURAL` enlaza por **todos** los atributos con el mismo nombre: `idprofesor` **y** `nombre`. Como el nombre de un profesor nunca coincide con el de una asignatura, no hay ninguna fila que cumpla la condición.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT *
+FROM profesores NATURAL JOIN asignaturas;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  inner_join(asignaturas)   # enlaza por idprofesor y nombre
+```
+:::
+::::
+
+## Ejercicio 3: theta join entre departamentos y proyectos
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS departamentos, proyectos CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE departamentos (
+  deptid      smallint PRIMARY KEY,
+  nombre      varchar(20) NOT NULL,
+  presupuesto numeric(8,2)
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE proyectos (
+  proyid      smallint PRIMARY KEY,
+  nombre      varchar(20) NOT NULL,
+  presupuesto numeric(8,2)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO departamentos VALUES (1, 'dep1', 1000), (2, 'dep2', 2000), (3, 'dep3', 3000);
+```
+
+```{sql, connection = con}
+INSERT INTO proyectos VALUES (1, 'proy1', 1500), (2, 'proy2', 2500), (3, 'proy3', 3500);
+```
+:::
+::: {.caja-r}
+```{r}
+departamentos <- leer("departamentos")
+proyectos     <- leer("proyectos")
+
+departamentos
+proyectos
+```
+:::
+::::
+
+**3.1.** Si el departamento D tiene presupuesto suficiente para abordar el proyecto P, mostrar el nombre del departamento y del proyecto. Es un theta join con la condición `d.presupuesto >= p.presupuesto`. Como `nombre` y `presupuesto` se llaman igual en ambas tablas, hay que calificarlos (alias en SQL, sufijos en R). A diferencia de las expresiones aritméticas, las **desigualdades entre columnas** sí se pueden escribir directamente en `join_by()`.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT d.nombre AS departamento, p.nombre AS proyecto
+FROM departamentos AS d
+  JOIN proyectos AS p ON (d.presupuesto >= p.presupuesto);
+```
+:::
+::: {.caja-r}
+```{r}
+departamentos %>%
+  inner_join(proyectos,
+             by = join_by(presupuesto >= presupuesto),
+             suffix = c("_dep", "_proy")) %>%
+  select(departamento = nombre_dep, proyecto = nombre_proy)
+```
+:::
+::::
+
+**3.2.** Igual que el anterior, pero forzando a que salgan **todos los proyectos**: proy3 no lo puede abordar ningún departamento y aparece con `NULL`. (Si en cambio quisiéramos todos los departamentos, bastaría con un `LEFT JOIN`: dep1 no puede abordar ningún proyecto).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT d.nombre AS departamento, p.nombre AS proyecto
+FROM departamentos AS d
+  RIGHT JOIN proyectos AS p ON (d.presupuesto >= p.presupuesto);
+```
+:::
+::: {.caja-r}
+```{r}
+departamentos %>%
+  right_join(proyectos,
+             by = join_by(presupuesto >= presupuesto),
+             suffix = c("_dep", "_proy")) %>%
+  select(departamento = nombre_dep, proyecto = nombre_proy)
+```
+:::
+::::
+
+## Ejercicio 4: relación varios a varios
+
+`profesores` y `asignaturas` no se pueden unir directamente (aunque compartan el atributo `nombre`): la relación varios a varios se representa con la tabla intermedia `imparte`, así que cada consulta necesita **dos** joins.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS asignaturas, profesores, imparte CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE asignaturas (
+  id         integer PRIMARY KEY,
+  nombre     char(15),
+  horasclase integer
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE profesores (
+  dni           integer PRIMARY KEY,
+  nombre        char(15),
+  horasContrato integer
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE imparte (
+  dni integer REFERENCES profesores,
+  id  integer REFERENCES asignaturas,
+  PRIMARY KEY (dni, id)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO asignaturas VALUES
+  (1, 'Asig1', 80), (2, 'Asig2', 40), (3, 'Asig3', 20), (4, 'Asig4', 10);
+```
+
+```{sql, connection = con}
+INSERT INTO profesores VALUES
+  (1, 'Prof1', 100), (2, 'Prof2', 50), (3, 'Prof3', 25), (4, 'Prof4', 10);
+```
+
+```{sql, connection = con}
+INSERT INTO imparte VALUES (1, 1), (2, 2), (2, 3), (3, 3);
+```
+:::
+::: {.caja-r}
+```{r}
+asignaturas <- leer("asignaturas")
+profesores  <- leer("profesores")   # horasContrato llega como horascontrato
+imparte     <- leer("imparte")
+
+asignaturas
+profesores
+imparte
+```
+:::
+::::
+
+**4.1.** Listado de profesores con su(s) asignatura(s), **incluyendo los profesores que no imparten nada** (Prof4).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT p.nombre AS profesor, a.nombre AS asignatura
+FROM profesores AS p
+  LEFT JOIN imparte     AS i ON (p.dni = i.dni)
+  LEFT JOIN asignaturas AS a ON (i.id = a.id)
+ORDER BY profesor, asignatura;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  left_join(imparte, by = "dni") %>%
+  left_join(asignaturas, by = "id", suffix = c("_prof", "_asig")) %>%
+  select(profesor = nombre_prof, asignatura = nombre_asig) %>%
+  arrange(profesor, asignatura)
+```
+:::
+::::
+
+**4.2.** Listado de asignaturas con su(s) profesor(es), **incluyendo las asignaturas que no se imparten** (Asig4). Es simétrico al anterior.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT a.nombre AS asignatura, p.nombre AS profesor
+FROM asignaturas AS a
+  LEFT JOIN imparte    AS i ON (a.id = i.id)
+  LEFT JOIN profesores AS p ON (i.dni = p.dni)
+ORDER BY asignatura, profesor;
+```
+:::
+::: {.caja-r}
+```{r}
+asignaturas %>%
+  left_join(imparte, by = "id") %>%
+  left_join(profesores, by = "dni", suffix = c("_asig", "_prof")) %>%
+  select(asignatura = nombre_asig, profesor = nombre_prof) %>%
+  arrange(asignatura, profesor)
+```
+:::
+::::
+
+**4.3.** Listado de asignaturas con sus profesores, **incluyendo tanto las asignaturas que no se imparten como los profesores que no imparten**. Partimos de las asignaturas con un `LEFT JOIN` y terminamos con un `FULL JOIN` hacia profesores.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT a.nombre AS asignatura, p.nombre AS profesor
+FROM asignaturas AS a
+  LEFT JOIN imparte    AS i ON (a.id = i.id)
+  FULL JOIN profesores AS p ON (i.dni = p.dni)
+ORDER BY asignatura, profesor;
+```
+:::
+::: {.caja-r}
+```{r}
+asignaturas %>%
+  left_join(imparte, by = "id") %>%
+  full_join(profesores, by = "dni", suffix = c("_asig", "_prof")) %>%
+  select(asignatura = nombre_asig, profesor = nombre_prof) %>%
+  arrange(asignatura, profesor)
+```
+:::
+::::
+
+**4.4.** Profesores que con su contrato **no podrían cubrir alguna asignatura**: sus horas de contrato son menores que las horas de clase de alguna asignatura (theta join). Prof1 no sale porque con 100 horas puede con todas.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT p.nombre AS profesor, p.horascontrato,
+       a.nombre AS asignatura, a.horasclase
+FROM profesores AS p
+  JOIN asignaturas AS a ON (p.horascontrato < a.horasclase)
+ORDER BY profesor, asignatura;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  inner_join(asignaturas,
+             by = join_by(horascontrato < horasclase),
+             suffix = c("_prof", "_asig")) %>%
+  select(profesor = nombre_prof, horascontrato,
+         asignatura = nombre_asig, horasclase) %>%
+  arrange(profesor, asignatura)
+```
+:::
+::::
+
+Con un `LEFT JOIN` aparecen todos los profesores, y Prof1 lo hace con nulos:
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT p.nombre AS profesor, p.horascontrato,
+       a.nombre AS asignatura, a.horasclase
+FROM profesores AS p
+  LEFT JOIN asignaturas AS a ON (p.horascontrato < a.horasclase)
+ORDER BY profesor, asignatura;
+```
+:::
+::: {.caja-r}
+```{r}
+profesores %>%
+  left_join(asignaturas,
+            by = join_by(horascontrato < horasclase),
+            suffix = c("_prof", "_asig")) %>%
+  select(profesor = nombre_prof, horascontrato,
+         asignatura = nombre_asig, horasclase) %>%
+  arrange(profesor, asignatura)
+```
+:::
+::::
+
+# SQL (y R) son relacionalmente completos: la división
+
+Un lenguaje es **relacionalmente completo** si puede expresar las cinco operaciones básicas del AR: selección, proyección, unión, diferencia y producto cartesiano (más el renombrado). Todo lo demás (intersección, joins, división) se deriva de ellas. Lo comprobamos con la operación derivada más exigente, la **división** (÷): *chicos que conocen a todas las chicas*.
+
+La idea, usando solo operaciones básicas, es:
+
+1. Todas las parejas posibles: π~chico~(Chicos) × π~chica~(Chicas).
+2. Parejas que **no** se conocen: (1) − Conoce.
+3. Chicos a los que les falta conocer a alguna chica: π~chico~(2).
+4. Resultado: π~chico~(Chicos) − (3).
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+DROP TABLE IF EXISTS chicos, chicas, conoce CASCADE;
+```
+
+```{sql, connection = con}
+CREATE TABLE chicos (
+  dnichico integer PRIMARY KEY,
+  nombre   varchar(15)
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE chicas (
+  dnichica integer PRIMARY KEY,
+  nombre   varchar(15)
+);
+```
+
+```{sql, connection = con}
+CREATE TABLE conoce (
+  dnichico integer REFERENCES chicos,
+  dnichica integer REFERENCES chicas,
+  PRIMARY KEY (dnichico, dnichica)
+);
+```
+
+```{sql, connection = con}
+INSERT INTO chicos VALUES (1, 'Pepe'), (2, 'Juan'), (3, 'Luis');
+```
+
+```{sql, connection = con}
+INSERT INTO chicas VALUES (4, 'Ana'), (5, 'Maria');
+```
+
+```{sql, connection = con}
+INSERT INTO conoce VALUES (1, 4), (1, 5), (2, 4);
+```
+:::
+::: {.caja-r}
+```{r}
+chicos <- leer("chicos")
+chicas <- leer("chicas")
+conoce <- leer("conoce")
+
+conoce
+```
+:::
+::::
+
+**Parejas que no se conocen** (pasos 1 y 2):
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT c.dnichico, ch.dnichica
+FROM chicos AS c CROSS JOIN chicas AS ch
+EXCEPT
+SELECT dnichico, dnichica FROM conoce
+ORDER BY dnichico, dnichica;
+```
+:::
+::: {.caja-r}
+```{r}
+parejas_no_conocidas <- chicos %>%
+  select(dnichico) %>%
+  cross_join(chicas %>% select(dnichica)) %>%
+  setdiff(conoce)
+
+parejas_no_conocidas %>% arrange(dnichico, dnichica)
+```
+:::
+::::
+
+**Chicos que conocen a todas las chicas** (pasos 3 y 4). Solo Pepe las conoce a las dos.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT dnichico FROM chicos
+EXCEPT
+SELECT dnichico
+FROM (SELECT c.dnichico, ch.dnichica
+      FROM chicos AS c CROSS JOIN chicas AS ch
+      EXCEPT
+      SELECT dnichico, dnichica FROM conoce) AS no_conocidas;
+```
+:::
+::: {.caja-r}
+```{r}
+chicos %>%
+  select(dnichico) %>%
+  setdiff(parejas_no_conocidas %>% select(dnichico))
+```
+:::
+::::
+
+Con el nombre del chico, añadiendo un join final. En SQL también es habitual escribir la división con una doble negación (`NOT EXISTS`): *no existe ninguna chica a la que no conozca*.
+
+:::: {.paralelo}
+::: {.caja-sql}
+```{sql, connection = con}
+SELECT c.dnichico, c.nombre
+FROM chicos AS c
+WHERE NOT EXISTS (
+  SELECT 1 FROM chicas AS ch
+  WHERE NOT EXISTS (
+    SELECT 1 FROM conoce AS k
+    WHERE k.dnichico = c.dnichico
+      AND k.dnichica = ch.dnichica));
+```
+:::
+::: {.caja-r}
+```{r}
+chicos %>%
+  anti_join(parejas_no_conocidas, by = "dnichico")
+```
+:::
+::::
+
+# Cierre de la conexión
+
+Al terminar, cerramos la conexión con la base de datos.
+
+```{r desconexion}
+dbDisconnect(con)
+```
