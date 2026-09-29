@@ -36,9 +36,13 @@ SELECT * FROM alumnos;
 
 /*###-------------------------------------------------------------------------###
 # QUE SE HACE CON LOS REPETIDOS -- UN SOLO CAMPO*/
+SELECT altura FROM alumnos;	
 
 /*###-------------------------------------------------------------------------###
 # QUE SE HACE CON LOS REPETIDOS -- VARIOS CAMPOS*/
+
+SELECT DISTINCT altura FROM alumnos;	
+
 
 /*
 ###-------------------------------------------------------------------------###
