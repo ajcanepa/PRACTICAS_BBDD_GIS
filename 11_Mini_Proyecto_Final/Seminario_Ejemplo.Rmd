@@ -15,18 +15,31 @@ Para poder ejecutar los comandos de `sql` en un documento RMarkdown, deberemos u
 
 A continuación se detalla los pasos necesarios para generar una conexión local.
 
-```{r warning=FALSE, message=FALSE}
-# Cargar el paquete RPostgres
+```{r conexion, warning=FALSE, message=FALSE}
 library(DBI)
 library(RPostgres)
+library(tidyverse)
 
-# Conectar a la base de datos PostgreSQL
-con <- dbConnect(RPostgres::Postgres(),
-                 dbname = "postgres",  # Nombre de la base de datos
-                 host = "localhost",           # Dirección del host
-                 port = 5432,                  # Puerto de PostgreSQL
-                 user = "postgres",          # Tu usuario de PostgreSQL
-                 password = "postgres")   # Tu contraseña de PostgreSQL
+con <- dbConnect(
+  RPostgres::Postgres(),
+  host     = "localhost",  # Dirección del host
+  port     = 5432,         # Puerto de PostgreSQL
+  dbname   = "postgres",   # Nombre de la base de datos
+  user     = "postgres",   # Tu usuario de PostgreSQL
+  password = "postgres"    # Tu contraseña de PostgreSQL
+)
+```
+
+## Función auxiliar para leer tablas en R
+
+PostgreSQL **pasa a minúsculas** los identificadores que no van entre comillas (`Nombre` se guarda como `nombre`, `Ape1` como `ape1`) y el tipo `char(n)` **rellena con espacios** hasta la longitud declarada (`'Pepe'` en un `char(20)` se devuelve como `'Pepe                '`). Para que en R podamos comparar textos sin sorpresas, leemos las tablas con una pequeña función que elimina esos espacios sobrantes.
+
+```{r funcion-leer}
+leer <- function(connection = con, tabla = tabla) {
+  dbReadTable(con, tabla) %>%
+    as_tibble() %>%
+    mutate(across(where(is.character), str_trim))
+}
 ```
 
 # Idea de Seminario
@@ -92,9 +105,7 @@ Código del seminario
 
 Contendrá los datos de los pacientes.
 
-```{r, warning=FALSE, message=FALSE}
-# Crear tabla 'pacientes'
-dbExecute(con, "
+```{sql, connection = con}
 CREATE TABLE pacientes (
     id_paciente SERIAL PRIMARY KEY,
     nombre VARCHAR(100),
@@ -103,20 +114,16 @@ CREATE TABLE pacientes (
     peso DECIMAL(5,2) CHECK (peso > 0), -- Peso debe ser mayor a 0
     altura DECIMAL(4,2) CHECK (altura > 0) -- Altura debe ser mayor a 0
 );
-")
 ```
 
 Ahora agregamos los datos de los pacientes
 
-```{r, warning=FALSE, message=FALSE}
-# Insertar datos en 'pacientes'
-dbExecute(con, "
+```{sql, connection = con}
 INSERT INTO pacientes (nombre, edad, genero, peso, altura) 
 VALUES 
     ('Juan Pérez', 45, 'Masculino', 80.5, 1.75),
     ('Ana López', 30, 'Femenino', 65.3, 1.68),
     ('Carlos Martínez', 60, 'Masculino', 90.2, 1.80);
-")
 ```
 
 Mostramos la tabla
@@ -124,14 +131,18 @@ Mostramos la tabla
 ```{sql, connection=con}
 SELECT * FROM pacientes; 
 ```
+Si queremos traer la tabla desde `PostgreSQL` al directorio de trabajo de R (`Global Environment`) debemos usar:
+
+```{r}
+pacientes <- leer(connection = con, tabla = "pacientes")
+pacientes
+```
 
 #### **Tabla consultas**
 
 Contendrá los registros de consultas médicas.
 
-```{r, message=FALSE, warning=FALSE}
-# Crear tabla 'consultas'
-dbExecute(con, "
+```{sql, connection=con}
 CREATE TABLE consultas (
     id_consulta SERIAL PRIMARY KEY,
     id_paciente INTEGER REFERENCES pacientes(id_paciente), -- Clave foránea a 'pacientes'
@@ -139,20 +150,16 @@ CREATE TABLE consultas (
     diagnostico VARCHAR(255),
     CONSTRAINT chk_fecha CHECK (fecha <= CURRENT_DATE) -- La fecha de consulta no puede ser futura
 );
-")
 ```
 
 Ahora agregamos valores a las tablas de consultas
 
-```{r, warning=FALSE, message=FALSE}
-# Insertar datos en 'consultas'
-dbExecute(con, "
+```{sql, connection=con}
 INSERT INTO consultas (id_paciente, fecha, diagnostico) 
 VALUES 
     (1, '2024-01-10', 'Hipertensión'),
     (2, '2024-02-15', 'Diabetes Tipo 2'),
     (3, '2024-03-01', 'Insuficiencia Cardíaca');
-")
 ```
 
 Mostramos la tabla
@@ -161,13 +168,19 @@ Mostramos la tabla
 SELECT * FROM consultas; 
 ```
 
+
+Si queremos traer la tabla desde `PostgreSQL` al directorio de trabajo de R (`Global Environment`) debemos usar:
+
+```{r}
+consultas <- leer(connection = con, tabla = "consultas")
+consultas
+```
+
 #### **Tabla tratamientos**
 
 Contendrá los tratamientos que se administran a los pacientes.
 
-```{r warning=FALSE, message=FALSE}
-# Crear tabla 'tratamientos'
-dbExecute(con, "
+```{sql, connection=con}
 CREATE TABLE tratamientos (
     id_tratamiento SERIAL PRIMARY KEY,
     id_consulta INTEGER REFERENCES consultas(id_consulta), -- Clave foránea a 'consultas'
@@ -175,20 +188,16 @@ CREATE TABLE tratamientos (
     duracion_dias INTEGER CHECK (duracion_dias > 0), -- La duración del tratamiento debe ser mayor a 0
     dosis_mg DECIMAL(5,2) CHECK (dosis_mg > 0) -- La dosis debe ser mayor a 0
 );
-")
 ```
 
 Ahora agregamos valores a la tabla de tratamientos
 
-```{r, warning=FALSE, message=FALSE}
-# Insertar datos en 'tratamientos'
-dbExecute(con, "
+```{sql, connection=con}
 INSERT INTO tratamientos (id_consulta, nombre_tratamiento, duracion_dias, dosis_mg) 
 VALUES 
     (1, 'Enalapril', 30, 10.5),
     (2, 'Metformina', 60, 850.0),
     (3, 'Furosemida', 15, 40.0);
-")
 ```
 
 Mostramos la tabla
@@ -196,6 +205,14 @@ Mostramos la tabla
 ```{sql, connection=con}
 SELECT * FROM tratamientos; 
 ```
+
+Si queremos traer la tabla desde `PostgreSQL` al directorio de trabajo de R (`Global Environment`) debemos usar:
+
+```{r}
+tratamientos <- leer(connection = con, tabla = "tratamientos")
+tratamientos
+```
+
 
 ### Pregunta 1
 
@@ -208,6 +225,15 @@ JOIN consultas ON pacientes.id_paciente = consultas.id_paciente
 JOIN tratamientos ON consultas.id_consulta = tratamientos.id_consulta;
 ```
 
+```{r}
+pacientes %>%
+  inner_join(consultas, by = "id_paciente") %>%
+  inner_join(tratamientos, by = "id_consulta") %>%
+  select(nombre, nombre_tratamiento)
+```
+
+
+
 ### Pregunta 2
 
 2.  Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
@@ -217,6 +243,20 @@ SELECT consultas.diagnostico, COUNT(consultas.id_consulta) AS total_consultas
 FROM consultas 
 GROUP BY consultas.diagnostico;
 ```
+
+```{r}
+consultas %>%
+  group_by(diagnostico) %>%
+  summarise(total_consultas = sum(!is.na(id_consulta)))
+```
+
+```{r, echo=FALSE, eval=FALSE}
+# Aún mejor!
+consultas %>%
+  count(diagnostico, name = "total_consultas")
+```
+
+
 
 ### Pregunta 3
 
@@ -229,11 +269,14 @@ JOIN tratamientos ON consultas.id_consulta = tratamientos.id_consulta
 GROUP BY consultas.diagnostico;
 ```
 
-```{r, echo=FALSE, eval=FALSE}
-# Consultar los datos
-result <- dbGetQuery(con, "SELECT * FROM usuarios")
-print(result)
+```{r}
+consultas %>%
+  inner_join(tratamientos, by = "id_consulta") %>%
+  group_by(diagnostico) %>%
+  summarise(dosis_promedio = mean(dosis_mg, na.rm = TRUE))
 ```
+
+
 
 # Finalizando el documento
 

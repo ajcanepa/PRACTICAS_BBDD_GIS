@@ -2,7 +2,7 @@
 title: "Seminario Asignatura"
 subtitle: "Bases de Datos"
 author: "Antonio Canepa"
-date: "2025-11-05"
+date: "2026-10-01"
 output: 
   html_document:
     keep_md: true
@@ -17,17 +17,31 @@ A continuación se detalla los pasos necesarios para generar una conexión local
 
 
 ``` r
-# Cargar el paquete RPostgres
 library(DBI)
 library(RPostgres)
+library(tidyverse)
 
-# Conectar a la base de datos PostgreSQL
-con <- dbConnect(RPostgres::Postgres(),
-                 dbname = "postgres",  # Nombre de la base de datos
-                 host = "localhost",           # Dirección del host
-                 port = 5432,                  # Puerto de PostgreSQL
-                 user = "postgres",          # Tu usuario de PostgreSQL
-                 password = "postgres")   # Tu contraseña de PostgreSQL
+con <- dbConnect(
+  RPostgres::Postgres(),
+  host     = "localhost",  # Dirección del host
+  port     = 5432,         # Puerto de PostgreSQL
+  dbname   = "postgres",   # Nombre de la base de datos
+  user     = "postgres",   # Tu usuario de PostgreSQL
+  password = "postgres"    # Tu contraseña de PostgreSQL
+)
+```
+
+## Función auxiliar para leer tablas en R
+
+PostgreSQL **pasa a minúsculas** los identificadores que no van entre comillas (`Nombre` se guarda como `nombre`, `Ape1` como `ape1`) y el tipo `char(n)` **rellena con espacios** hasta la longitud declarada (`'Pepe'` en un `char(20)` se devuelve como `'Pepe                '`). Para que en R podamos comparar textos sin sorpresas, leemos las tablas con una pequeña función que elimina esos espacios sobrantes.
+
+
+``` r
+leer <- function(connection = con, tabla = tabla) {
+  dbReadTable(con, tabla) %>%
+    as_tibble() %>%
+    mutate(across(where(is.character), str_trim))
+}
 ```
 
 # Idea de Seminario
@@ -94,9 +108,7 @@ Código del seminario
 Contendrá los datos de los pacientes.
 
 
-``` r
-# Crear tabla 'pacientes'
-dbExecute(con, "
+``` sql
 CREATE TABLE pacientes (
     id_paciente SERIAL PRIMARY KEY,
     nombre VARCHAR(100),
@@ -105,29 +117,17 @@ CREATE TABLE pacientes (
     peso DECIMAL(5,2) CHECK (peso > 0), -- Peso debe ser mayor a 0
     altura DECIMAL(4,2) CHECK (altura > 0) -- Altura debe ser mayor a 0
 );
-")
-```
-
-```
-## [1] 0
 ```
 
 Ahora agregamos los datos de los pacientes
 
 
-``` r
-# Insertar datos en 'pacientes'
-dbExecute(con, "
+``` sql
 INSERT INTO pacientes (nombre, edad, genero, peso, altura) 
 VALUES 
     ('Juan Pérez', 45, 'Masculino', 80.5, 1.75),
     ('Ana López', 30, 'Femenino', 65.3, 1.68),
     ('Carlos Martínez', 60, 'Masculino', 90.2, 1.80);
-")
-```
-
-```
-## [1] 3
 ```
 
 Mostramos la tabla
@@ -150,15 +150,29 @@ Table: 3 records
 |3           |Carlos Martínez |   60|Masculino | 90.2|   1.80|
 
 </div>
+Si queremos traer la tabla desde `PostgreSQL` al directorio de trabajo de R (`Global Environment`) debemos usar:
+
+
+``` r
+pacientes <- leer(connection = con, tabla = "pacientes")
+pacientes
+```
+
+```
+## # A tibble: 3 × 6
+##   id_paciente nombre           edad genero     peso altura
+##         <int> <chr>           <int> <chr>     <dbl>  <dbl>
+## 1           1 Juan Pérez         45 Masculino  80.5   1.75
+## 2           2 Ana López          30 Femenino   65.3   1.68
+## 3           3 Carlos Martínez    60 Masculino  90.2   1.8
+```
 
 #### **Tabla consultas**
 
 Contendrá los registros de consultas médicas.
 
 
-``` r
-# Crear tabla 'consultas'
-dbExecute(con, "
+``` sql
 CREATE TABLE consultas (
     id_consulta SERIAL PRIMARY KEY,
     id_paciente INTEGER REFERENCES pacientes(id_paciente), -- Clave foránea a 'pacientes'
@@ -166,29 +180,17 @@ CREATE TABLE consultas (
     diagnostico VARCHAR(255),
     CONSTRAINT chk_fecha CHECK (fecha <= CURRENT_DATE) -- La fecha de consulta no puede ser futura
 );
-")
-```
-
-```
-## [1] 0
 ```
 
 Ahora agregamos valores a las tablas de consultas
 
 
-``` r
-# Insertar datos en 'consultas'
-dbExecute(con, "
+``` sql
 INSERT INTO consultas (id_paciente, fecha, diagnostico) 
 VALUES 
     (1, '2024-01-10', 'Hipertensión'),
     (2, '2024-02-15', 'Diabetes Tipo 2'),
     (3, '2024-03-01', 'Insuficiencia Cardíaca');
-")
-```
-
-```
-## [1] 3
 ```
 
 Mostramos la tabla
@@ -212,14 +214,30 @@ Table: 3 records
 
 </div>
 
+
+Si queremos traer la tabla desde `PostgreSQL` al directorio de trabajo de R (`Global Environment`) debemos usar:
+
+
+``` r
+consultas <- leer(connection = con, tabla = "consultas")
+consultas
+```
+
+```
+## # A tibble: 3 × 4
+##   id_consulta id_paciente fecha      diagnostico           
+##         <int>       <int> <date>     <chr>                 
+## 1           1           1 2024-01-10 Hipertensión          
+## 2           2           2 2024-02-15 Diabetes Tipo 2       
+## 3           3           3 2024-03-01 Insuficiencia Cardíaca
+```
+
 #### **Tabla tratamientos**
 
 Contendrá los tratamientos que se administran a los pacientes.
 
 
-``` r
-# Crear tabla 'tratamientos'
-dbExecute(con, "
+``` sql
 CREATE TABLE tratamientos (
     id_tratamiento SERIAL PRIMARY KEY,
     id_consulta INTEGER REFERENCES consultas(id_consulta), -- Clave foránea a 'consultas'
@@ -227,29 +245,17 @@ CREATE TABLE tratamientos (
     duracion_dias INTEGER CHECK (duracion_dias > 0), -- La duración del tratamiento debe ser mayor a 0
     dosis_mg DECIMAL(5,2) CHECK (dosis_mg > 0) -- La dosis debe ser mayor a 0
 );
-")
-```
-
-```
-## [1] 0
 ```
 
 Ahora agregamos valores a la tabla de tratamientos
 
 
-``` r
-# Insertar datos en 'tratamientos'
-dbExecute(con, "
+``` sql
 INSERT INTO tratamientos (id_consulta, nombre_tratamiento, duracion_dias, dosis_mg) 
 VALUES 
     (1, 'Enalapril', 30, 10.5),
     (2, 'Metformina', 60, 850.0),
     (3, 'Furosemida', 15, 40.0);
-")
-```
-
-```
-## [1] 3
 ```
 
 Mostramos la tabla
@@ -272,6 +278,24 @@ Table: 3 records
 |3              |           3|Furosemida         |            15|     40.0|
 
 </div>
+
+Si queremos traer la tabla desde `PostgreSQL` al directorio de trabajo de R (`Global Environment`) debemos usar:
+
+
+``` r
+tratamientos <- leer(connection = con, tabla = "tratamientos")
+tratamientos
+```
+
+```
+## # A tibble: 3 × 5
+##   id_tratamiento id_consulta nombre_tratamiento duracion_dias dosis_mg
+##            <int>       <int> <chr>                      <int>    <dbl>
+## 1              1           1 Enalapril                     30     10.5
+## 2              2           2 Metformina                    60    850  
+## 3              3           3 Furosemida                    15     40
+```
+
 
 ### Pregunta 1
 
@@ -299,6 +323,25 @@ Table: 3 records
 
 </div>
 
+
+``` r
+pacientes %>%
+  inner_join(consultas, by = "id_paciente") %>%
+  inner_join(tratamientos, by = "id_consulta") %>%
+  select(nombre, nombre_tratamiento)
+```
+
+```
+## # A tibble: 3 × 2
+##   nombre          nombre_tratamiento
+##   <chr>           <chr>             
+## 1 Juan Pérez      Enalapril         
+## 2 Ana López       Metformina        
+## 3 Carlos Martínez Furosemida
+```
+
+
+
 ### Pregunta 2
 
 2.  Cuántas consultas han sido diagnosticadas con cada tipo de diagnóstico?
@@ -323,6 +366,26 @@ Table: 3 records
 |Diabetes Tipo 2        |               1|
 
 </div>
+
+
+``` r
+consultas %>%
+  group_by(diagnostico) %>%
+  summarise(total_consultas = sum(!is.na(id_consulta)))
+```
+
+```
+## # A tibble: 3 × 2
+##   diagnostico            total_consultas
+##   <chr>                            <int>
+## 1 Diabetes Tipo 2                      1
+## 2 Hipertensión                         1
+## 3 Insuficiencia Cardíaca               1
+```
+
+
+
+
 
 ### Pregunta 3
 
@@ -349,6 +412,23 @@ Table: 3 records
 |Diabetes Tipo 2        |          850.0|
 
 </div>
+
+
+``` r
+consultas %>%
+  inner_join(tratamientos, by = "id_consulta") %>%
+  group_by(diagnostico) %>%
+  summarise(dosis_promedio = mean(dosis_mg, na.rm = TRUE))
+```
+
+```
+## # A tibble: 3 × 2
+##   diagnostico            dosis_promedio
+##   <chr>                           <dbl>
+## 1 Diabetes Tipo 2                 850  
+## 2 Hipertensión                     10.5
+## 3 Insuficiencia Cardíaca           40
+```
 
 
 
