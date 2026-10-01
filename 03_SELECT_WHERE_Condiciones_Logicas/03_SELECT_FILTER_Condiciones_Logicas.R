@@ -70,11 +70,11 @@ alumnos %>%
   select(.data = ., saludo, nombre, peso, altura)
 
 alumnos %>% 
-  mutate(saludo = paste0('Hola', nombre, sep = ""))
+  mutate(saludo = paste('Hola', nombre, sep = ""))
 
 # Si aplicamos select
 alumnos %>% 
-  mutate(saludo = paste0('Hola', nombre, sep = "")) %>% 
+  mutate(saludo = paste('Hola', nombre, sep = "")) %>% 
   select(.data = ., saludo, peso, altura)
 
 alumnos %>% 
