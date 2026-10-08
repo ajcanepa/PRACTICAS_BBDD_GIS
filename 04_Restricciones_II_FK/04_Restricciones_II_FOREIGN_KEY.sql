@@ -59,14 +59,35 @@ select * from estrellas;
 /* Agregando campos null y no existentes */
 
 -- se pueden insertar un null en la FK, a veces combiene un not null para evitarlo
+insert into estrellas values
+('estrella4WB', 'nombreEstrella4WB', 'ape1Estrella4WB', 'ape2Estrella4WB', null);
+
+select * from estrellas;
 
 -- la FK restringe insertar un dominio/valor que no esté en el padre ("Estrella Huérfana")
+insert into estrellas values
+('estrella5WB', 'nombreEstrella5WB', 'ape1Estrella5WB', 'ape2Estrella5WB', 'FX');
+
 
 -- Tampoco se puede actualizar una entrada con un padre que no existe (no puede ser huérfano)
+--select * from estrellas;
+update estrellas 
+set numestudio='FX'
+where numestudio='20';
+
 
 -- Tampoco puedo cambiar el dominio del padre (y que pierda sus hijos)
+select * from estudios;
+
+update estudios 
+set estudio='FX'
+where estudio='20';
 
 -- Tampoco se puede borrar un padre (deja hijos huérfanos), sí se pueden borrar hijos
+select * from estudios;
+
+delete from estudios
+where estudio='WB'; 
 
 /*----------------------------------------------------------------------------------*/
 /* Clave Ajena Compuesta -> RESTRICCIÓN DE TABLA  */
@@ -95,6 +116,7 @@ CONSTRAINT FK_estrella_estudio FOREIGN KEY (numEstudio) REFERENCES estudios --in
 /* DEFINIR ACCIONES CON "ON DELETE" ó "ON UPDATE"  */
 
 drop table if exists estrellas;
+
 CREATE TABLE estrellas (
 nombre_artistico CHAR(30),
 nombre CHAR(35),
@@ -228,6 +250,11 @@ select * from estudios;
 -- como hay una cascada ahora en estrellas también se cambian en la tabla hija.
 select * from estrellas;
 
+-- Experimento, cambiamos el numestudio de la tabla hija (estrellas)
+update estrellas 
+set numestudio='GB'
+where numestudio='WB';
+
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------------*/
@@ -249,6 +276,7 @@ Atributos NO tienen porqué llamarse igual
 -- tendrán un único protagoista por cada película
 
 drop table if exists peliculas;
+
 CREATE TABLE Peliculas (
 	titulo CHAR(40) PRIMARY KEY,
 	nombre_prota CHAR(35),
@@ -257,6 +285,7 @@ CREATE TABLE Peliculas (
 	
 	FOREIGN KEY (nombre_prota, ape1_prota, ape2_prota) REFERENCES estrellas
 );
+
 
 -- agregamos esta película con una estrella que ya existe
 insert into peliculas values ('Que gran pelicula!', 'nombreEstrella1WB', 'ape1Estrella1WB', 'ape2Estrella1WB');
@@ -307,7 +336,7 @@ select * from peliculas;
 /*----------------------------------------------------------------------------------*/
 /* BORRADO DE TABLAS */
 
-drop table if exists estudios;
+drop table if exists estudios CASCADE;
 
 drop table if exists estrellas;
 
