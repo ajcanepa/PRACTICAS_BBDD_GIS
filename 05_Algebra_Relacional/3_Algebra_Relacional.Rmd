@@ -3053,6 +3053,26 @@ chicos %>%
 :::
 ::::
 
+# Finalizando el documento
+
+Para finalizar el documento (y no entorpecer con las prácticas), es necesario crear un código que nos permita **borrar todas las tablas creadas**.
+
+```{r, message=FALSE, warning=FALSE}
+# Obtener la lista de todas las tablas en la base de datos
+tables <- dbListTables(con)
+print(tables)
+
+# Borrar todas las tablas
+for (table in tables) {
+  dbExecute(con, paste0("DROP TABLE IF EXISTS ", table, " CASCADE;"))
+}
+
+# Verificar que no queden tablas
+tables_after <- dbListTables(con)
+print(tables_after)
+
+```
+
 # Cierre de la conexión
 
 Al terminar, cerramos la conexión con la base de datos.
